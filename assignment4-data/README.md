@@ -1,80 +1,67 @@
-# CS336 Spring 2026 Assignment 4: Data
+# 📖 CS336 Assignment 4 — Data: Turning Common Crawl into Training Data
 
-For a full description of the assignment, see the assignment handout at
-[cs336_assignment4_data.pdf](./cs336_assignment4_data.pdf)
+A raw web crawl is not training data — it's HTML, boilerplate, duplicated boilerplate, and worse. 🕸️ The job
+is to build the pipeline that fixes that: extract text, filter by language, mask PII, drop harmful and
+low-quality pages, deduplicate — then train a model on my own filtered corpus and see whether it beats the
+baseline perplexity on the C4-100-domains slice of Paloma. Handout:
+[`cs336_assignment4_data.pdf`](./cs336_assignment4_data.pdf).
 
-If you see any issues with the assignment handout or code, please feel free to
-raise a GitHub issue or open a pull request with a fix.
+**Progress** — ⬜⬜⬜⬜⬜⬜⬜⬜ **0 / 8 pieces** written (71 pts). Scaffolding only. ☕
 
-## Setup
+## 📋 Build plan
 
-This directory is organized as follows:
+- [ ] **Data reconnaissance** · 4 pts — read a raw WARC and its WET file, annotate ~25 documents 👀
+- [ ] **HTML → text** · 3 pts — Resiliparse extraction with encoding detection 🌐
+- [ ] **Language filtering** · 6 pts — fastText `lid.176.bin` language ID 🗣️
+- [ ] **PII masking** · 3 pts — find and mask emails, phone numbers and IPs 🕵️
+- [ ] **Harmful-content filtering** · 6 pts — Dolma fastText NSFW + hate-speech classifiers ☣️
+- [ ] **Quality filtering** · 18 pts — Gopher heuristic rules **plus** a trained fastText quality classifier 🐹
+- [ ] **Deduplication** · 11 pts — exact line-level, then MinHash + LSH for fuzzy document duplicates 🧹
+- [ ] **Filter → inspect → tokenize → train** · 20 pts — apply the pipeline, eyeball what got dropped,
+  serialize `uint16` token IDs, and train a GPT-2-small-shaped model 🏋️
 
-- [`./cs336_basics`](./cs336_basics): This module contains the staff 
-  implementation of the language model from assignment 1. You will use this training code
-  to train an LM on your filtered data. You should not modify the training logic, since
-  your leaderboard submission must use it exactly.
-- [`./cs336_data`](./cs336_data): This folder is basically empty! This is the
-  module where you will implement code to filter and process the data.
+## 🧐 What I want to understand
 
-Visually, it should look something like:
+- WARC vs. WAT vs. WET, and why "the main content" is so hard to isolate from HTML
+- The precision/recall dial on every filter — each one quietly shapes what the model learns ⚖️
+- Why dedup pays off so well: repeated boilerplate just burns the compute budget 📉
+- MinHash + LSH: approximating Jaccard similarity without comparing every pair 🔎
+- How much of a perplexity win comes from *data* alone, with the architecture frozen 🧪
 
-``` sh
-.
-├── cs336_basics  # A python module named cs336_basics
-│   └── ... an optimized training implementation ...
-├── cs336_data  # TODO(you): code that you'll write for assignment 4
-│   ├── __init__.py
-│   └── ... TODO(you): any other files or folders you need for assignment 4 ...
-├── README.md
-├── pyproject.toml
-└── ... TODO(you): other files or folders you need for assignment 4 ...
-```
+## 📝 Field notes
 
-As in previous assignments, we use `uv` to manage dependencies.
+A running log — deliberately empty for now, it fills up as the pipeline runs.
 
-## Downloading data
+- **Never leak validation:** Paloma C4-100 may inform my filters, but no validation text may enter training data.
+- **Parallelize early:** these WET files are huge — reach for `concurrent.futures` / `multiprocessing` from the start.
+- **Everything else is frozen:** don't touch the model or the training script; the whole point is the data.
+- **Freeze before a 2-hour run:** a bad filter is expensive to discover after the GPU budget is gone. 💸
 
-### For students
+## ✅ Definition of done
 
-Data is available at `/shared-data`, such as `uv run modal shell ./scripts/download_data.py::main --cmd "ls -l /shared-data"`
+- All `tests/test_*.py` suites green (`extract`, `langid`, `pii`, `quality`, `toxicity`, `deduplication`) 🟢
+- A filtered + deduplicated corpus, tokenized to `uint16` with `<|endoftext|>` between documents 🔤
+- GPT-2-small-shaped (~430M params) trained: 8× B200, batch 128/device, 16,384 steps, ctx 512 (~8.6B tokens)
+- Validation perplexity on Paloma C4 100 domains better than the unfiltered baseline 🏆
 
-To only download the files needed for running offline, run `uv run scripts/download_data.py --offline-only`.
-To download all data for the students, run `uv run modal run scripts/download_data.py`
+## 🏃 Getting it running
 
-### For non-students
+1. `uv sync` — deps are managed with [`uv`](https://docs.astral.sh/uv/), and Modal sponsors the compute ☁️
+2. Get the data (students read from `/shared-data`): `uv run scripts/download_data.py --offline-only` for the
+   offline subset, or `uv run modal run scripts/download_data.py` for everything — the latter only after
+   implementing `is_english` in `cs336_data/wet_files.py` 📥
+3. Launch training on my tokenized shard:
+   `uv run modal run scripts/train.py --train-bin /root/data/your_data.bin`
 
-To only download the files needed for running offline, run `uv run scripts/download_data.py --offline-only`.
+## 🧭 Repo layout
 
-Implement the method `is_english` in [`./cs336_data/wet_files.py`](./cs336_data/wet_files.py) before downloading the full non-offline data.
+- `cs336_data/` — my pipeline: extraction, filtering, PII, classifiers, dedup (mostly `TODO`s) ✍️
+- `cs336_basics/` — staff trainer from Assignment 1 (~430M-param GPT-2 small); do **not** modify it 🔒
+- `scripts/download_data.py` · `scripts/train.py` · `scripts/generate_with_gpt2_tok.py` — data + training entrypoints
+- `tests/adapters.py` + `tests/test_*.py` — the suites to pass
+- `configs/` · `pyproject.toml` · `test_and_make_submission.sh` · `cs336_assignment4_data.pdf`
 
-#### Modal
+---
 
-Remove `environment_name` from `shared_data_volume` in [`./cs336_data/modal_utils.py`](./cs336_data/modal_utils.py)
+Better data beats a better model. 🧹
 
-```python
-uv run modal run scripts/download_data.py
-```
-
-#### Non-modal
-
-Change the path in [`./cs336_data/common.py`](./cs336_data/common.py) and run `uv run scripts/download_data.py`.
-
-Consider changing `n_files` for `EnglishWetFiles` in [`./cs336_data/wet_files.py`](./cs336_data/wet_files.py) if you want to download less than 2.5k WET files.
-
-## Training on Modal
-
-The Modal entrypoint in [`./scripts/train.py`](./scripts/train.py) contains the full training config; pass the path to your GPT-2-tokenized training data with `--train-bin`.
-
-The final training run uses 8 B200 GPUs:
-
-```sh
-uv run modal run scripts/train.py --train-bin /root/data/your_data.bin
-```
-
-## Submitting
-
-To submit, run `./test_and_make_submission.sh` . This script will install your
-code's dependencies, run tests, and create a zip with the output. We
-should be able to unzip your submitted tarball and run
-`./test_and_make_submission.sh` to verify your test results.
