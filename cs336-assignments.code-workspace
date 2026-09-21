@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "name": "A1 · Basics",
+      "path": "assignment1-basics"
+    },
+    {
+      "name": "A2 · Systems",
+      "path": "assignment2-systems"
+    },
+    {
+      "name": "A3 · Scaling",
+      "path": "assignment3-scaling"
+    },
+    {
+      "name": "A4 · Data",
+      "path": "assignment4-data"
+    },
+    {
+      "name": "A5 · Alignment",
+      "path": "assignment5-alignment"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.venv": true,
+      "**/.pytest_cache": true,
+      "**/__pycache__": true
+    },
+    "search.exclude": {
+      "**/.venv": true,
+      "**/.pytest_cache": true,
+      "**/__pycache__": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "charliermarsh.ruff"
+    ]
+  }
+}

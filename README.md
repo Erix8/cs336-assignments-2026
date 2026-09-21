@@ -15,6 +15,14 @@ every piece of an LM by hand: tokenizer, Transformer, optimizer, kernels, parall
 
 ## 🚀 Setup
 
+### VS Code
+
+Open [`cs336-assignments.code-workspace`](./cs336-assignments.code-workspace) instead of the repository root as a single folder. The multi-root workspace treats every assignment as an independent Python project and selects that assignment's `.venv`.
+
+```sh
+code cs336-assignments.code-workspace
+```
+
 Each folder is its own [`uv`](https://docs.astral.sh/uv/) project:
 
 ```sh
