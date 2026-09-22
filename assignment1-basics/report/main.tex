@@ -44,15 +44,17 @@
 
 % ---------- Convenience macros ----------
 \newcommand{\problem}[2]{%
-    \subsection*{Problem #1: #2}%
-    \addcontentsline{toc}{subsection}{Problem #1: #2}%
+    \subsection*{Problem \texttt{#1}: #2}%
+    \addcontentsline{toc}{subsection}{Problem \texttt{#1}: #2}%
 }
 \newcommand{\deliverable}[1]{\paragraph{Deliverable.} #1}
 
+% ---------- Listings caption prefix ----------
+\renewcommand{\lstlistingname}{Code}
+
 \title{%
     CS336 Assignment 1 (basics): \\
-    Building a Transformer Language Model \\
-    \large Writeup
+    Building a Transformer Language Model
 }
 \author{Erix Liu \\ \texttt{liuhelei.erix@gmail.com}}
 \date{Spring 2026}
