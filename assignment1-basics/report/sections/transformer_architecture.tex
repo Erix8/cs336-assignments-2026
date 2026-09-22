@@ -1,0 +1,106 @@
+\section{Transformer Language Model Architecture}
+% ======================================================================
+
+\problem{linear}{Implementing the linear module (1 point)}
+
+\deliverable{Implement a \texttt{Linear} class that inherits from \texttt{torch.nn.Module} and performs a linear transformation.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{embedding}{Implement the embedding module (1 point)}
+
+\deliverable{Implement an \texttt{Embedding} class that inherits from \texttt{torch.nn.Module}.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{rmsnorm}{Root Mean Square Layer Normalization (1 point)}
+
+\deliverable{Implement \texttt{RMSNorm} as a \texttt{torch.nn.Module}.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{positionwise\_feedforward}{Implement the position-wise feed-forward network (2 points)}
+
+\deliverable{Implement the SwiGLU feed-forward network, composed of a SiLU activation and a gated linear unit.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{rope}{Implement RoPE (2 points)}
+
+\deliverable{Implement a class \texttt{RotaryPositionalEmbedding} that applies RoPE to the input tensor.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{softmax}{Implement softmax (1 point)}
+
+\deliverable{Write a function to apply the softmax operation on a tensor.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{scaled\_dot\_product\_attention}{Implement scaled dot-product attention (5 points)}
+
+\deliverable{Implement the scaled dot-product attention function.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{multihead\_self\_attention}{Implement causal multi-head self-attention (5 points)}
+
+\deliverable{Implement causal multi-head self-attention as a \texttt{torch.nn.Module}.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{transformer\_block}{Implement the Transformer block (3 points)}
+
+\deliverable{Transformer block code that passes the provided tests.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{transformer\_lm}{Implementing the Transformer LM (3 points)}
+
+\deliverable{A Transformer LM module that passes the provided tests.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{transformer\_accounting}{Transformer LM resource accounting (5 points)}
+
+\textbf{(a)} How many trainable parameters would a GPT-2 XL-sized model have? How much memory is required to load it (single-precision)?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} Identify the matrix multiplies required for a forward pass. How many FLOPs do they require in total?
+
+\deliverable{A list of matrix multiplies (with descriptions), and the total number of FLOPs.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(c)} Which parts of the model require the most FLOPs?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(d)} Repeat the analysis with GPT-2 small, medium, and large. How do proportional FLOPs change with model size?
+
+\deliverable{For each model, provide a breakdown of model components and associated FLOPs (as a proportion of total). Include a one-to-two sentence description.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(e)} Take GPT-2 XL and increase the context length to 16{,}384. How does the total FLOPs and relative contribution change?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+

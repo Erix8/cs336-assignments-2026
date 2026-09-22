@@ -1,0 +1,137 @@
+\section{Byte-Pair Encoding (BPE) Tokenizer}
+% ======================================================================
+
+\problem{unicode1}{Understanding Unicode (1 point)}
+
+\textbf{(a)} What Unicode character does \texttt{chr(0)} return?
+
+\deliverable{A one-sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} How does this character's string representation (\texttt{\_\_repr\_\_()}) differ from its printed representation?
+
+\deliverable{A one-sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(c)} What happens when this character occurs in text?
+
+\deliverable{A one-sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{unicode2}{Unicode Encodings (3 points)}
+
+\textbf{(a)} What are some reasons to prefer training our tokenizer on UTF-8 encoded bytes, rather than UTF-16 or UTF-32?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} Why is \texttt{decode\_utf8\_bytes\_to\_str\_wrong} incorrect? Provide an example input byte string that yields incorrect results.
+
+\deliverable{An example input byte string, with a one-sentence explanation.}
+
+\textit{Answer:} % TODO: your answer here
+
+\begin{lstlisting}[caption={Incorrect UTF-8 decoding function}]
+def decode_utf8_bytes_to_str_wrong(bytestring: bytes):
+    return "".join([bytes([b]).decode("utf-8") for b in bytestring])
+\end{lstlisting}
+
+\textbf{(c)} Give a two-byte sequence that does not decode to any Unicode character(s).
+
+\deliverable{An example, with a one-sentence explanation.}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{train\_bpe}{BPE Tokenizer Training (15 points)}
+
+\deliverable{Write a function that, given a path to an input text file, trains a (byte-level) BPE tokenizer.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+\begin{lstlisting}[caption={BPE training function signature}]
+def train_bpe(input_path: str, vocab_size: int, special_tokens: list[str]) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
+    # TODO: your implementation
+    pass
+\end{lstlisting}
+
+
+\problem{train\_bpe\_tinystories}{BPE Training on TinyStories (2 points)}
+
+\textbf{(a)} Train a byte-level BPE tokenizer on TinyStories with a maximum vocabulary size of 10{,}000. How much time and memory did training take? What is the longest token in the vocabulary?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} Profile your code. What part of the tokenizer training process takes the most time?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{train\_bpe\_expts\_owt}{BPE Training on OpenWebText (2 points)}
+
+\textbf{(a)} Train a byte-level BPE tokenizer on OpenWebText with a maximum vocabulary size of 32{,}000. What is the longest token in the vocabulary?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} Compare and contrast the tokenizer that you get training on TinyStories versus OpenWebText.
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{tokenizer}{Implementing the tokenizer (15 points)}
+
+\deliverable{Implement a \texttt{Tokenizer} class that, given a vocabulary and a list of merges, encodes text into integer IDs and decodes integer IDs into text.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+\begin{lstlisting}[caption={Tokenizer class interface}]
+class Tokenizer:
+    def __init__(self, vocab, merges, special_tokens=None): ...
+    @classmethod
+    def from_files(cls, vocab_filepath, merges_filepath, special_tokens=None): ...
+    def encode(self, text: str) -> list[int]: ...
+    def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]: ...
+    def decode(self, ids: list[int]) -> str: ...
+\end{lstlisting}
+
+
+\problem{tokenizer\_experiments}{Experiments with tokenizers (4 points)}
+
+\textbf{(a)} Sample 10 documents from TinyStories and OpenWebText. What is each tokenizer's compression ratio (bytes/token)?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} What happens if you tokenize your OpenWebText sample with the TinyStories tokenizer?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(c)} Estimate the throughput of your tokenizer (bytes/second). How long would it take to tokenize the Pile (825GB)?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(d)} Why is \texttt{uint16} an appropriate choice for serializing token IDs?
+
+\deliverable{A one-to-two sentence response.}
+
+\textit{Answer:} % TODO: your answer here
+
+
