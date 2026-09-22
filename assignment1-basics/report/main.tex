@@ -1,0 +1,78 @@
+\documentclass[11pt, a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{parskip}
+\setlength{\parindent}{0pt}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ---------- Hyperref setup ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    urlcolor=blue!60!black,
+    citecolor=blue!60!black,
+}
+
+% ---------- Listings setup ----------
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue!70!black},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red!60!black},
+    language=Python,
+    tabsize=4,
+    showstringspaces=false,
+}
+
+% ---------- Convenience macros ----------
+\newcommand{\problem}[2]{%
+    \subsection*{Problem \texttt{#1}: #2}%
+    \addcontentsline{toc}{subsection}{Problem \texttt{#1}: #2}%
+}
+\newcommand{\deliverable}[1]{\paragraph{Deliverable.} #1}
+
+% ---------- Listings caption prefix ----------
+\renewcommand{\lstlistingname}{Code}
+
+\title{%
+    CS336 Assignment 1 (basics): \\
+    Building a Transformer Language Model
+}
+\author{Erix Liu \\ \texttt{liuhelei.erix@gmail.com}}
+\date{Spring 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\newpage
+
+% --- Section files ---
+\input{sections/bpe_tokenizer}
+\input{sections/transformer_architecture}
+\input{sections/training_lm}
+\input{sections/training_loop}
+\input{sections/generating_text}
+\input{sections/experiments}
+
+\end{document}

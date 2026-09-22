@@ -1,0 +1,176 @@
+\section{Experiments}
+% ======================================================================
+
+\problem{experiment\_log}{Experiment logging (3 points)}
+
+\deliverable{Logging infrastructure code for your experiments and an experiment log for the problems below.}
+
+\textit{Answer:} % TODO: describe your logging infrastructure and experiment log
+
+
+\problem{learning\_rate}{Tune the learning rate (3 points)}
+
+\textbf{(a)} Perform a hyperparameter sweep over learning rates and report the final losses.
+
+\deliverable{Learning curves associated with multiple learning rates. Explain your hyperparameter search strategy.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/learning_rate_sweep.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Learning rate sweep learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves for different learning rates on TinyStories.}
+    \label{fig:lr_sweep}
+\end{figure}
+
+\textit{Search strategy:} % TODO: describe your strategy
+
+\deliverable{A model with validation loss (per-token) on TinyStories of at most 1.45.}
+
+\textit{Achieved validation loss:} % TODO: report your loss
+
+\textbf{(b)} Investigate how the point at which learning rates diverge is related to your best learning rate.
+
+\deliverable{Learning curves of increasing learning rate with at least one divergent run, and an analysis.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/learning_rate_divergence.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Learning rate divergence analysis \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves showing divergence at high learning rates.}
+    \label{fig:lr_divergence}
+\end{figure}
+
+\textit{Analysis:} % TODO: your analysis
+
+
+\problem{batch\_size\_experiment}{Batch size variations (1 point)}
+
+\deliverable{Learning curves for runs with different batch sizes.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/batch_size_experiment.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Batch size experiment learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves for different batch sizes on TinyStories.}
+    \label{fig:batch_size}
+\end{figure}
+
+\deliverable{A few sentences discussing your findings on batch sizes and their impacts on training.}
+
+\textit{Findings:} % TODO: your findings
+
+
+\problem{generate}{Generate text (1 point)}
+
+\deliverable{Text dump of at least 256 tokens of text (or until the first \texttt{<eos>} token), and a brief comment on fluency.}
+
+\textit{Generated text:}
+
+\begin{quote}
+% TODO: paste your generated text here (at least 256 tokens)
+\end{quote}
+
+\textit{Fluency commentary:} % TODO: comment on fluency and at least two factors
+
+
+\problem{layer\_norm\_ablation}{Remove RMSNorm and train (1 point)}
+
+\deliverable{A learning curve for when you remove RMSNorms and train, as well as a learning curve for the best learning rate.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/layer_norm_ablation.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} RMSNorm ablation learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves comparing with and without RMSNorm.}
+    \label{fig:layer_norm_ablation}
+\end{figure}
+
+\deliverable{A few sentences of commentary on the impact of RMSNorm.}
+
+\textit{Commentary:} % TODO: your commentary
+
+
+\problem{pre\_norm\_ablation}{Implement post-norm and train (1 point)}
+
+\deliverable{A learning curve for a post-norm Transformer, compared to the pre-norm one.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/pre_norm_ablation.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Pre-norm vs.\ post-norm learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves comparing pre-norm and post-norm Transformers.}
+    \label{fig:pre_norm_ablation}
+\end{figure}
+
+
+\problem{no\_pos\_emb}{Implement NoPE (1 point)}
+
+\deliverable{A learning curve comparing the performance of RoPE and NoPE.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/nope_vs_rope.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} RoPE vs.\ NoPE learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves comparing RoPE and NoPE.}
+    \label{fig:nope_vs_rope}
+\end{figure}
+
+
+\problem{swiglu\_ablation}{SwiGLU vs.\ SiLU (1 point)}
+
+\deliverable{A learning curve comparing the performance of SwiGLU and SiLU feed-forward networks.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/swiglu_vs_silu.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} SwiGLU vs.\ SiLU learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curves comparing SwiGLU and SiLU feed-forward networks.}
+    \label{fig:swiglu_vs_silu}
+\end{figure}
+
+\deliverable{A few sentences discussing your findings.}
+
+\textit{Findings:} % TODO: your findings
+
+
+\problem{main\_experiment}{Experiment on OWT (2 points)}
+
+\deliverable{A learning curve of your language model on OpenWebText. Describe the difference in losses from TinyStories.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/owt_training.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} OpenWebText training learning curve \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curve for the language model trained on OpenWebText.}
+    \label{fig:owt_training}
+\end{figure}
+
+\textit{Loss comparison:} % TODO: describe the difference in losses
+
+\deliverable{Generated text from OpenWebText LM. How is the fluency? Why is the output quality worse?}
+
+\textit{Generated text:}
+
+\begin{quote}
+% TODO: paste your generated text here
+\end{quote}
+
+\textit{Fluency commentary:} % TODO: comment on fluency and why it's worse
+
+
+\problem{leaderboard}{Leaderboard (6 points)}
+
+\deliverable{The final validation loss, an associated learning curve (wall-clock-time x-axis, < 45 min), and a description of what you did.}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{figures/leaderboard.png}
+    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Leaderboard submission learning curve \\ \textit{(insert figure here)}\vspace{2cm}}}
+    \caption{Learning curve for the leaderboard submission (wall-clock time on x-axis).}
+    \label{fig:leaderboard}
+\end{figure}
+
+\textit{Final validation loss:} % TODO: report your loss
+
+\textit{Description:} % TODO: describe what modifications you made
+

@@ -1,0 +1,62 @@
+\section{Training a Transformer LM}
+% ======================================================================
+
+\problem{cross\_entropy}{Implement cross-entropy (1 point)}
+
+\deliverable{Write a function to compute the cross-entropy loss.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{learning\_rate\_tuning}{Tuning the learning rate (1 point)}
+
+\deliverable{Run the SGD example with learning rates 1e1, 1e2, and 1e3 for 10 iterations. What happens?}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{adamw}{Implement AdamW (2 points)}
+
+\deliverable{Implement the AdamW optimizer as a subclass of \texttt{torch.optim.Optimizer}.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{adamw\_accounting}{Resource accounting for training with AdamW (2 points)}
+
+\textbf{(a)} How much peak memory does running AdamW require? Decompose into parameters, activations, gradients, and optimizer state.
+
+\deliverable{An algebraic expression for each component, as well as the total.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(b)} Instantiate your answer for GPT-2 XL. What is the maximum batch size within 80GB?
+
+\deliverable{An expression of the form $a \cdot \text{batch\_size} + b$, and a number for the maximum batch size.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(c)} How many FLOPs does running one step of AdamW take?
+
+\deliverable{An algebraic expression, with a brief justification.}
+
+\textit{Answer:} % TODO: your answer here
+
+\textbf{(d)} Assuming 50\% MFU on an H100, how long would it take to train GPT-2 XL for 400K steps with batch size 1024?
+
+\deliverable{The number of hours training would take, with a brief justification.}
+
+\textit{Answer:} % TODO: your answer here
+
+
+\problem{learning\_rate\_schedule}{Implement cosine learning rate schedule with warmup (1 point)}
+
+\deliverable{Write a function that implements the cosine annealing learning rate schedule with warmup.}
+
+\textit{Implementation summary:} % TODO: briefly describe your implementation
+
+
+\problem{gradient\_clipping}{Implement gradient clipping (1 point)}
+
+\deliverable{Write a function that implements gradient clipping.}
+
