@@ -55,7 +55,7 @@ def decode_utf8_bytes_to_str_wrong(bytestring: bytes):
 \begin{lstlisting}[caption={BPE training function}]
 def train_bpe(input_path: str, vocab_size: int, special_tokens: list[str]) 
     -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
-    freq_table = pretokenize(input_path, "<|endoftext|>", special_tokens)
+    freq_table = count_pretokens(input_path, "<|endoftext|>", special_tokens)
     trainer = BPETrainer(freq_table, special_tokens)
     del freq_table
     return trainer.train(vocab_size)
@@ -104,17 +104,17 @@ This difference reflects both the broader OpenWebText corpus and its larger 32K 
 
 \deliverable{Implement a \texttt{Tokenizer} class that, given a vocabulary and a list of merges, encodes text into integer IDs and decodes integer IDs into text.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
-
 \begin{lstlisting}[caption={Tokenizer class interface}]
 class Tokenizer:
     def __init__(self, vocab, merges, special_tokens=None): ...
     @classmethod
-    def from_files(cls, vocab_filepath, merges_filepath, special_tokens=None): ...
+    def from_files(cls, vocab_file, merges_file, special_tokens=None): ...
     def encode(self, text: str) -> list[int]: ...
     def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]: ...
     def decode(self, ids: list[int]) -> str: ...
 \end{lstlisting}
+
+\textit{Implementation summary:} The tokenizer loads byte vocabularies and ordered merges, recognizes the longest matching special token, and applies BPE within each GPT-2 pre-token according to merge rank. Its streaming encoder retains unfinished pre-tokens and possible special-token prefixes across input chunks, while decoding concatenates token bytes before replacing malformed UTF-8 sequences.
 
 
 \problem{tokenizer\_experiments}{Experiments with tokenizers (4 points)}
@@ -123,22 +123,27 @@ class Tokenizer:
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Excluding document separators, the TinyStories tokenizer achieved 4.019 bytes per token on 10 sampled TinyStories documents (8{,}484 bytes / 2{,}111 tokens). The OpenWebText tokenizer achieved 3.774 bytes per token on 10 sampled OpenWebText documents (93{,}516 bytes / 24{,}778 tokens).
 
 \textbf{(b)} What happens if you tokenize your OpenWebText sample with the TinyStories tokenizer?
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} On the same 10 OpenWebText documents, the TinyStories tokenizer achieved 2.816 bytes/token (93{,}516 bytes / 33{,}213 tokens), compared with 3.774 bytes/token for the OpenWebText tokenizer. It used about 34\% more tokens for this sample.
 
 \textbf{(c)} Estimate the throughput of your tokenizer (bytes/second). How long would it take to tokenize the Pile (825GB)?
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} On my machine (macOS + Apple M4 + 16GB RAM), the OpenWebText tokenizer encoded the cached 10-document sample at about 1.67 MB/s (1{,}668{,}392 bytes/s) over repeated in-memory passes. 
+At that rate, tokenizing 825 GB would take about 137 hours (5.7 days), excluding file I/O and variation across documents.
 
-\textbf{(d)} Why is \texttt{uint16} an appropriate choice for serializing token IDs?
+\textbf{(d)} Using the tokenizers to encode the respective training and 
+development datasets into a sequence of integer token IDs. Why serializing the token IDs as a NumPy array of 
+datatype \texttt{uint16} is an appropriate choice?
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} The TinyStories and OpenWebText vocabularies use IDs 0--9{,}999 and 0--31{,}999, respectively, 
+both within the \texttt{uint16} range of 0--65{,}535. Each ID therefore occupies 2 bytes rather than 4 bytes with \texttt{uint32}, 
+reducing storage and memory-mapped I/O for the tokenized datasets.
