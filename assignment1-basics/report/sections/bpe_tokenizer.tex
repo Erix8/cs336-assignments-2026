@@ -19,7 +19,8 @@
 
 \deliverable{A one-sentence response.}
 
-\textit{Answer:} The null character is invisible when printed, so \texttt{"this is a test" + chr(0) + "string"} appears as \texttt{this is a teststring} even though the string length is 21, not 20.
+\textit{Answer:} The null character is invisible when printed, so \texttt{"this is a test" + chr(0) +}\linebreak\texttt{"string"} 
+appears as \texttt{this is a teststring} even though the string length is 21, not 20.
 
 
 \problem{unicode2}{Unicode Encodings (3 points)}
@@ -72,7 +73,7 @@ Training ends when the vocabulary reaches the requested size.
 \deliverable{A one-to-two sentence response.}
 
 \textit{Answer:} Training the 10K-token TinyStories tokenizer took approximately 109 seconds and reached a maximum resident set size of 0.80 GiB. 
-The longest non-special tokens were “ accomplishment,” “ disappointment,” and “ responsibility,” each 15 bytes long, which is reasonable because they are frequent words merged together with their leading spaces.
+The longest non-special tokens were `` accomplishment,'' `` disappointment,'' and `` responsibility,'' each 15 bytes long, which is reasonable because they are frequent words merged together with their leading spaces.
 
 \textbf{(b)} Profile your code. What part of the tokenizer training process takes the most time?
 

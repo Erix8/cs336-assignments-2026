@@ -82,6 +82,7 @@ def tokenize_corpus(dataset: str, split: str, output_dir: Path, batch_size: int)
             disable=not sys.stderr.isatty(),
         ) as progress,
     ):
+
         def decoded_lines() -> Iterator[str]:
             for raw_line in source:
                 progress.update(len(raw_line))

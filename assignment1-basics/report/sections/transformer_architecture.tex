@@ -5,14 +5,20 @@
 
 \deliverable{Implement a \texttt{Linear} class that inherits from \texttt{torch.nn.Module} and performs a linear transformation.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
+\textit{Implementation summary:} 
+I implemented a bias-free \texttt{Linear} module with a trainable weight matrix of shape $(d_{\text{out}}, d_{\text{in}})$. 
+Its forward pass contracts the input's final dimension with the weight's input dimension to produce outputs of shape $(\ldots, d_{\text{out}})$; 
+the weights are initialized with the prescribed truncated normal distribution. The adapter loads the test-provided matrix into the module before evaluating it.
 
 
 \problem{embedding}{Implement the embedding module (1 point)}
 
 \deliverable{Implement an \texttt{Embedding} class that inherits from \texttt{torch.nn.Module}.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
+\textit{Implementation summary:} 
+I implemented \texttt{Embedding} with a trainable matrix whose rows correspond to vocabulary entries and whose columns are embedding dimensions. 
+I initialize the matrix with the prescribed truncated normal distribution. The forward pass uses token IDs to select rows, so an input of shape $(\ldots)$ 
+produces vectors of shape $(\ldots, d_{\text{model}})$. The adapter loads the supplied embedding matrix before performing the lookup.
 
 
 \problem{rmsnorm}{Root Mean Square Layer Normalization (1 point)}
