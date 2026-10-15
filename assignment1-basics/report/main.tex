@@ -43,9 +43,9 @@
 }
 
 % ---------- Convenience macros ----------
-\newcommand{\problem}[2]{%
-    \subsection*{Problem \texttt{#1}: #2}%
-    \addcontentsline{toc}{subsection}{Problem \texttt{#1}: #2}%
+\newcommand{\problem}[3]{%
+    \subsection*{\raggedright Problem (\texttt{#1}): #2 (#3 point\ifnum#3=1\else s\fi)}%
+    \addcontentsline{toc}{subsection}{Problem: #2 (#3 point\ifnum#3=1\else s\fi)}%
 }
 \newcommand{\deliverable}[1]{}
 

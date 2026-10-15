@@ -1,7 +1,7 @@
 \section{Transformer Language Model Architecture}
 % ======================================================================
 
-\problem{linear}{Implementing the linear module (1 point)}
+\problem{linear}{Implementing the linear module}{1}
 
 \deliverable{Implement a \texttt{Linear} class that inherits from \texttt{torch.nn.Module} and performs a linear transformation.}
 
@@ -12,7 +12,7 @@ def forward(self, x: Tensor) -> Tensor:
     return einsum(x, self.weight, "... d_in, d_out d_in -> ... d_out")
 \end{lstlisting}
 
-\problem{embedding}{Implement the embedding module (1 point)}
+\problem{embedding}{Implement the embedding module}{1}
 
 \deliverable{Implement an \texttt{Embedding} class that inherits from \texttt{torch.nn.Module}.}
 
@@ -29,7 +29,7 @@ def forward(self, token_ids: Tensor) -> Tensor:
     return self.weight[token_ids]
 \end{lstlisting}
 
-\problem{rmsnorm}{Root Mean Square Layer Normalization (1 point)}
+\problem{rmsnorm}{Root Mean Square Layer Normalization}{1}
 
 \deliverable{Implement \texttt{RMSNorm} as a \texttt{torch.nn.Module}.}
 
@@ -43,7 +43,7 @@ return (x / rms * self.weight).to(in_dtype)
 \end{lstlisting}
 
 
-\problem{positionwise\_feedforward}{\texorpdfstring{\protect\newline}{}Implement the position-wise feed-forward network (2 points)}
+\problem{positionwise\_feedforward}{Implement the position-wise feed-forward network}{2}
 
 \deliverable{Implement the SwiGLU feed-forward network, composed of a SiLU activation and a gated linear unit.}
 
@@ -55,7 +55,7 @@ def swiglu(x: Tensor, w1: Linear, w2: Linear, w3: Linear) -> Tensor:
 \end{lstlisting}
 
 
-\problem{rope}{Implement RoPE (2 points)}
+\problem{rope}{Implement RoPE}{2}
 
 \deliverable{Implement a class \texttt{RotaryPositionalEmbedding} that applies RoPE to the input tensor.}
 
@@ -76,7 +76,7 @@ the supplied token positions. Rotation uses float32 arithmetic before
 casting back to the input dtype.
 
 
-\problem{softmax}{Implement softmax (1 point)}
+\problem{softmax}{Implement softmax}{1}
 
 \deliverable{Write a function to apply the softmax operation on a tensor.}
 
@@ -91,7 +91,7 @@ def softmax(x: Tensor, dim: int) -> Tensor:
     return result.movedim(-1, dim)
 \end{lstlisting}
 
-\problem{scaled\_dot\_product\_attention}{\texorpdfstring{\protect\newline}{}Implement scaled dot-product attention (5 points)}
+\problem{scaled\_dot\_product\_attention}{Implement scaled dot-product attention}{5}
 
 \deliverable{Implement the scaled dot-product attention function.}
 
@@ -111,7 +111,7 @@ broadcasts to the score shape; each query must retain at least one allowed
 finite score.
 
 
-\problem{multihead\_self\_attention}{\texorpdfstring{\protect\newline}{}Implement causal multi-head self-attention (5 points)}
+\problem{multihead\_self\_attention}{Implement causal multi-head self-attention}{5}
 
 \deliverable{Implement causal multi-head self-attention as a \texttt{torch.nn.Module}.}
 
@@ -131,7 +131,7 @@ Y=\operatorname{Concat}(H_1,\ldots,H_h)W_O^\top.
 \]
 
 
-\problem{transformer\_block}{Implement the Transformer block (3 points)}
+\problem{transformer\_block}{Implement the Transformer block}{3}
 
 \deliverable{Transformer block code that passes the provided tests.}
 
@@ -149,7 +149,7 @@ def forward(self, x: Tensor) -> Tensor:
 \end{lstlisting}
 
 \newpage
-\problem{transformer\_lm}{Implementing the Transformer LM (3 points)}
+\problem{transformer\_lm}{Implementing the Transformer LM}{3}
 
 \deliverable{A Transformer LM module that passes the provided tests.}
 
@@ -167,7 +167,7 @@ cache. Input embeddings and the output projection use separate weights;
 softmax is deferred to the loss or sampling routine.
 
 
-\problem{transformer\_accounting}{Transformer LM resource accounting (5 points)}
+\problem{transformer\_accounting}{Transformer LM resource accounting}{5}
 
 Let $V=50{,}257$, $T=1{,}024$, and let $L,d,h,f$ denote the number of layers,
 model width, number of heads, and FFN width, respectively. For XL,

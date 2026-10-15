@@ -1,7 +1,10 @@
 import argparse
 import logging
 import math
+from contextlib import nullcontext
 from pathlib import Path
+from time import perf_counter
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
@@ -13,6 +16,9 @@ from cs336_basics.model import Transformer
 from cs336_basics.nn_utils import cross_entropy, gradient_clipping
 from cs336_basics.optimizer import AdamW, lr_cosine_schedule
 from cs336_basics.serialization import load_checkpoint, save_checkpoint
+
+if TYPE_CHECKING:
+    from wandb.sdk.wandb_run import Run
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +189,15 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Checkpoint to resume from.",
     )
+    logging_args.add_argument("--wandb-project", help="Enable W&B tracking in this project.")
+    logging_args.add_argument("--wandb-entity", help="W&B user or team; defaults to the configured entity.")
+    logging_args.add_argument("--run-name", help="Display name for this W&B run.")
+    logging_args.add_argument(
+        "--wandb-mode",
+        choices=("online", "offline"),
+        default="online",
+        help="W&B sync mode; only used when --wandb-project is set.",
+    )
 
     args = parser.parse_args()
     for name in (
@@ -278,6 +293,15 @@ def load_dataset(path: Path, context_length: int) -> npt.NDArray:
     return dataset
 
 
+def synchronize_device(device: str) -> None:
+    # Accelerator execution is asynchronous, so timing must wait for queued work.
+    device_type = torch.device(device).type
+    if device_type == "mps":
+        torch.mps.synchronize()
+    elif device_type == "cuda":
+        torch.cuda.synchronize(device)
+
+
 def train(
     model: torch.nn.Module,
     optimizer: torch.optim.Optimizer,
@@ -285,6 +309,7 @@ def train(
     val_dataset: npt.NDArray,
     args: argparse.Namespace,
     start_step: int,
+    run: "Run | None" = None,
 ) -> None:
     model.train()
     completed_steps = start_step
@@ -292,6 +317,10 @@ def train(
         name: getattr(args, name)
         for name in ("vocab_size", "context_length", "d_model", "num_layers", "num_heads", "d_ff", "rope_theta")
     }
+    synchronize_device(args.device)
+    started_at = interval_started_at = perf_counter()
+    last_logged_step = start_step
+    tokens_per_step = args.batch_size * args.context_length
 
     for step in range(start_step, args.max_steps):
         lr = lr_cosine_schedule(
@@ -321,12 +350,49 @@ def train(
         optimizer.step()
         completed_steps = step + 1
 
-        if completed_steps % args.log_interval == 0:
-            logger.info("step=%d/%d lr=%.6g train_loss=%.4f", completed_steps, args.max_steps, lr, loss.item())
+        log_training = completed_steps % args.log_interval == 0 or completed_steps == args.max_steps
+        metrics = {}
+        if log_training:
+            synchronize_device(args.device)
+            now = perf_counter()
+            interval_steps = completed_steps - last_logged_step
+            seconds_per_step = (now - interval_started_at) / interval_steps
+            train_loss = loss.item()
+            metrics.update(
+                {
+                    "train/loss": train_loss,
+                    "train/lr": lr,
+                    "perf/seconds_per_step": seconds_per_step,
+                    "perf/tokens_per_second": tokens_per_step / seconds_per_step,
+                }
+            )
+            logger.info(
+                "step=%d/%d lr=%.6g train_loss=%.4f elapsed_s=%.2f s/step=%.4f tokens/s=%.0f",
+                completed_steps,
+                args.max_steps,
+                lr,
+                train_loss,
+                now - started_at,
+                seconds_per_step,
+                tokens_per_step / seconds_per_step,
+            )
+            interval_started_at = now
+            last_logged_step = completed_steps
 
         if completed_steps % args.eval_interval == 0:
             val_loss = evaluate(model, val_dataset, args)
             logger.info("step=%d val_loss=%.4f", completed_steps, val_loss)
+            metrics["val/loss"] = val_loss
+
+        if metrics and run is not None:
+            metrics.update(
+                {
+                    "train/step": completed_steps,
+                    "train/tokens_seen": completed_steps * tokens_per_step,
+                    "time/elapsed_seconds": perf_counter() - started_at,
+                }
+            )
+            run.log(metrics)
 
         if completed_steps % args.save_interval == 0:
             checkpoint_path = args.out_dir / f"step_{completed_steps}.pt"
@@ -336,6 +402,9 @@ def train(
     checkpoint_path = args.out_dir / "final.pt"
     save_checkpoint(model, optimizer, completed_steps, checkpoint_path, model_config=model_config)
     logger.info("Training finished at step %d; saved %s", completed_steps, checkpoint_path)
+    if run is not None:
+        run.summary["completed_steps"] = completed_steps
+        run.summary["session_elapsed_seconds"] = perf_counter() - started_at
 
 
 def main():
@@ -371,7 +440,29 @@ def main():
     if args.resume:
         start_step = load_checkpoint(args.resume, model, optimizer)
         logger.info("Resumed from %s at step %d", args.resume, start_step)
-    train(model, optimizer, train_dataset, val_dataset, args, start_step)
+    tracking = nullcontext(None)
+    if args.wandb_project:
+        import wandb
+
+        config = {name: str(value) if isinstance(value, Path) else value for name, value in vars(args).items()}
+        config["start_step"] = start_step
+        config["parameter_count"] = sum(p.numel() for p in model.parameters())
+        tracking = wandb.init(
+            project=args.wandb_project,
+            entity=args.wandb_entity,
+            name=args.run_name,
+            config=config,
+            dir=str(args.out_dir.resolve()),
+            mode=args.wandb_mode,
+        )
+    with tracking as run:
+        if run is not None:
+            run.define_metric("train/step")
+            run.define_metric("time/elapsed_seconds")
+            for prefix in ("train/*", "val/*", "perf/*"):
+                run.define_metric(prefix, step_metric="train/step")
+            run.define_metric("val/loss", step_metric="train/step", summary="min")
+        train(model, optimizer, train_dataset, val_dataset, args, start_step, run=run)
 
 
 if __name__ == "__main__":

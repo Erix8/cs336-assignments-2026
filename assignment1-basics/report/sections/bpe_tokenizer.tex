@@ -1,7 +1,7 @@
 \section{Byte-Pair Encoding (BPE) Tokenizer}
 % ======================================================================
 
-\problem{unicode1}{Understanding Unicode (1 point)}
+\problem{unicode1}{Understanding Unicode}{1}
 
 \textbf{(a)} What Unicode character does \texttt{chr(0)} return?
 
@@ -27,7 +27,7 @@ The null character is invisible when printed, so \texttt{"this is a test"}
 appears as \texttt{this is a teststring} even though the string length is 21, not 20.
 
 
-\problem{unicode2}{Unicode Encodings (3 points)}
+\problem{unicode2}{Unicode Encodings}{3}
 
 \textbf{(a)} What are some reasons to prefer training our tokenizer on UTF-8 encoded bytes, rather than UTF-16 or UTF-32?
 
@@ -56,7 +56,7 @@ The function tries to decode each byte individually, but multi-byte UTF-8 charac
 \texttt{b'\textbackslash x80\textbackslash x80'} does not decode to any Unicode character. Both bytes are continuation bytes (\texttt{0x80}--\texttt{0xBF}), which must follow a leading byte; a sequence of only continuation bytes is invalid UTF-8.
 
 \newpage
-\problem{train\_bpe}{BPE Tokenizer Training (15 points)}
+\problem{train\_bpe}{BPE Tokenizer Training}{15}
 
 \deliverable{Write a function that, given a path to an input text file, trains a (byte-level) BPE tokenizer.}
 
@@ -77,7 +77,7 @@ I split the corpus at document boundaries and pre-tokenize it in parallel, then 
 For each BPE merge, I select the most frequent adjacent pair, breaking ties lexicographically, and use an inverted index to update counts only for affected pre-tokens. 
 Training ends when the vocabulary reaches the requested size.
 
-\problem{train\_bpe\_tinystories}{BPE Training on TinyStories (2 points)}
+\problem{train\_bpe\_tinystories}{BPE Training on TinyStories}{2}
 
 \textbf{(a)} Train a byte-level BPE tokenizer on TinyStories with a maximum vocabulary size of 10{,}000. How much time and memory did training take? What is the longest token in the vocabulary?
 
@@ -95,7 +95,7 @@ The longest non-special tokens were `` accomplishment,'' `` disappointment,'' an
 Pre-tokenization was the main end-to-end bottleneck, taking 82.15 of the 108.99 seconds. Within the merging stage, repeated full scans of the pair-frequency table dominated runtime.
 
 
-\problem{train\_bpe\_expts\_owt}{BPE Training on OpenWebText (2 points)}
+\problem{train\_bpe\_expts\_owt}{BPE Training on OpenWebText}{2}
 
 \textbf{(a)} Train a byte-level BPE tokenizer on OpenWebText with a maximum vocabulary size of 32{,}000. What is the longest token in the vocabulary?
 
@@ -116,7 +116,7 @@ whereas OpenWebText also learns web and topical fragments such as \texttt{http},
 This difference reflects both the broader OpenWebText corpus and its larger 32K vocabulary, so it cannot be attributed to the corpus alone.
 
 
-\problem{tokenizer}{Implementing the tokenizer (15 points)}
+\problem{tokenizer}{Implementing the tokenizer}{15}
 
 \deliverable{Implement a \texttt{Tokenizer} class that, given a vocabulary and a list of merges, encodes text into integer IDs and decodes integer IDs into text.}
 
@@ -146,7 +146,7 @@ return token_bytes.decode("utf-8", errors="replace")
 \end{lstlisting}
 
 
-\problem{tokenizer\_experiments}{Experiments with tokenizers (4 points)}
+\problem{tokenizer\_experiments}{Experiments with tokenizers}{4}
 
 \textbf{(a)} Sample 10 documents from TinyStories and OpenWebText. What is each tokenizer's compression ratio (bytes/token)?
 

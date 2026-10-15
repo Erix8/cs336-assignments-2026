@@ -4,7 +4,7 @@
 \section{Training Loop}
 % ======================================================================
 
-\problem{data\_loading}{Implement data loading (2 points)}
+\problem{data\_loading}{Implement data loading}{2}
 
 \deliverable{Write a function that takes a numpy array, batch size, context length, and device, and returns a pair of tensors.}
 
@@ -26,7 +26,7 @@ targets = torch.tensor(targets_np, dtype=torch.long, device=device)
 Only sampled windows are materialized; the dataset can remain memory-mapped.
 
 
-\problem{checkpointing}{Implement model checkpointing (1 point)}
+\problem{checkpointing}{Implement model checkpointing}{1}
 
 \deliverable{Implement \texttt{save\_checkpoint} and \texttt{load\_checkpoint} functions.}
 
@@ -56,7 +56,7 @@ model.load_state_dict(checkpoint["model"])
 \end{lstlisting}
 
 
-\problem{training\_together}{Put it together (4 points)}
+\problem{training\_together}{Put it together}{4}
 
 \deliverable{Write a script that runs a training loop to train your model on user-provided input.}
 

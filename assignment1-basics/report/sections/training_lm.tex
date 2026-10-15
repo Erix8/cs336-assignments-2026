@@ -1,6 +1,6 @@
 \section{Training a Transformer LM}
 % ======================================================================
-\problem{cross\_entropy}{Implement cross-entropy (1 point)}
+\problem{cross\_entropy}{Implement cross-entropy}{1}
 
 \deliverable{Write a function to compute the cross-entropy loss.}
 
@@ -22,7 +22,7 @@ return (torch.log(logits_sum) - target_logits).mean()
 The provided test passed, including its large-logit case.
 
 
-\problem{learning\_rate\_tuning}{Tuning the learning rate (1 point)}
+\problem{learning\_rate\_tuning}{Tuning the learning rate}{1}
 
 \deliverable{Run the SGD example with learning rates 1e1, 1e2, and 1e3 for 10 iterations. What happens?}
 
@@ -53,7 +53,7 @@ size $\alpha/\sqrt{t+1}$ from the SGD example; losses were recorded initially
 and after each of 10 updates.
 
 
-\problem{adamw}{Implement AdamW (2 points)}
+\problem{adamw}{Implement AdamW}{2}
 
 \deliverable{Implement the AdamW optimizer as a subclass of \texttt{torch.optim.Optimizer}.}
 
@@ -88,7 +88,7 @@ An optional closure is evaluated with gradients enabled, and its loss is
 returned.
 
 
-\problem{adamw\_accounting}{Resource accounting for training with AdamW (2 points)}
+\problem{adamw\_accounting}{Resource accounting for training with AdamW}{2}
 
 \textbf{(a)} How much peak memory does running AdamW require? Decompose into parameters, activations, gradients, and optimizer state.
 
@@ -255,7 +255,7 @@ or gradient accumulation to achieve the effective batch size. Using the
 rounded FFN width of 4,288 instead gives approximately 4,850.07 hours.
 
 
-\problem{learning\_rate\_schedule}{Implement cosine learning rate schedule with warmup (1 point)}
+\problem{learning\_rate\_schedule}{Implement cosine learning rate schedule with warmup}{1}
 
 \deliverable{Write a function that implements the cosine annealing learning rate schedule with warmup.}
 
@@ -278,7 +278,7 @@ length $T_c-T_w$. Its endpoints are $\alpha(T_w)=\alpha_{\max}$ and
 $\alpha(T_c)=\alpha_{\min}$, assuming $T_c>T_w$.
 
 
-\problem{gradient\_clipping}{Implement gradient clipping (1 point)}
+\problem{gradient\_clipping}{Implement gradient clipping}{1}
 
 \deliverable{Write a function that implements gradient clipping.}
 
