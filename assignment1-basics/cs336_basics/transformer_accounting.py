@@ -51,8 +51,10 @@ def forward_flops(config: ModelConfig) -> dict[str, int]:
 def print_flops(config: ModelConfig) -> None:
     counts = forward_flops(config)
     total = sum(counts.values())
-    print(f"{config.name}: L={config.num_layers}, d={config.d_model}, "
-          f"h={config.num_heads}, f={config.d_ff}, T={config.context_length}")
+    print(
+        f"{config.name}: L={config.num_layers}, d={config.d_model}, "
+        f"h={config.num_heads}, f={config.d_ff}, T={config.context_length}"
+    )
     print(f"{'Component':<24} {'FLOPs':>20} {'Share':>9}")
     for name, count in counts.items():
         print(f"{name:<24} {count:>20,} {count / total:>8.2%}")
@@ -76,8 +78,7 @@ def main() -> None:
     total_parameters = sum(counts.values())
     memory_bytes = 4 * total_parameters
     print(f"Total parameters: {total_parameters:,}")
-    print(f"FP32 memory: {memory_bytes:,} bytes = {memory_bytes / 1e9:.6f} GB "
-          f"= {memory_bytes / 2**30:.6f} GiB\n")
+    print(f"FP32 memory: {memory_bytes:,} bytes = {memory_bytes / 1e9:.6f} GB = {memory_bytes / 2**30:.6f} GiB\n")
 
     print("(b) Forward matrix multiplies and FLOPs")
     print("Per layer, summed over heads:")

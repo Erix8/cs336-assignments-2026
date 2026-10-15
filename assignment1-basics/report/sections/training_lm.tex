@@ -1,25 +1,74 @@
 \section{Training a Transformer LM}
 % ======================================================================
-
 \problem{cross\_entropy}{Implement cross-entropy (1 point)}
 
 \deliverable{Write a function to compute the cross-entropy loss.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
+\textit{Implementation summary:} For each prediction, subtract the maximum
+logit along the vocabulary dimension to obtain shifted logits $s$. Compute
+the loss as $\log\sum_j \exp(s_j)-s_y$, where $y$ is the target token index;
+this cancels the target's log and exponential and avoids exponential overflow.
+Use \texttt{gather} along the last dimension to select $s_y$, preserving a
+singleton vocabulary dimension so that the subtraction has matching shapes,
+then average over all batch dimensions. The provided
+\texttt{test\_cross\_entropy} passed, including its large-logit case.
 
 
 \problem{learning\_rate\_tuning}{Tuning the learning rate (1 point)}
 
 \deliverable{Run the SGD example with learning rates 1e1, 1e2, and 1e3 for 10 iterations. What happens?}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Compared with the slow loss decrease at $\alpha=1$, $\alpha=10$
+decreased the loss faster and $\alpha=100$ reached approximately zero within
+10 iterations (the first update left the loss essentially unchanged).
+At $\alpha=1000$, the loss diverged, increasing from about $24.17$ to
+$6.35\times10^{19}$ after 10 updates.
+
+\begin{center}
+\begin{tabular}{rrr}
+\toprule
+Initial learning rate & Initial loss & Loss after 10 updates \\
+\midrule
+1 & 24.1693 & 19.7481 \\
+10 & 24.1693 & 2.8504 \\
+100 & 24.1693 & $3.8487\times10^{-24}$ \\
+1000 & 24.1693 & $6.3511\times10^{19}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+A local random generator with seed 42 sampled a single $10\times10$ initial
+weight matrix. Each run cloned this matrix and created a fresh SGD optimizer,
+holding the initialization, objective, precision, and number of updates fixed
+while varying only the initial learning rate. All runs used the decaying step
+size $\alpha/\sqrt{t+1}$ from the SGD example; losses were recorded initially
+and after each of 10 updates.
 
 
 \problem{adamw}{Implement AdamW (2 points)}
 
 \deliverable{Implement the AdamW optimizer as a subclass of \texttt{torch.optim.Optimizer}.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
+\textit{Implementation summary:} Subclass \texttt{torch.optim.Optimizer},
+validate the hyperparameters, and store their defaults in parameter groups.
+For each parameter with a gradient, lazily initialize its first and second
+moment tensors to zero and maintain a separate update counter starting at 1.
+At update $t$, compute
+\[
+\alpha_t=\alpha\frac{\sqrt{1-\beta_2^t}}{1-\beta_1^t},\qquad
+m\leftarrow\beta_1m+(1-\beta_1)g,\qquad
+v\leftarrow\beta_2v+(1-\beta_2)g^2.
+\]
+Apply decoupled weight decay before the moment-adjusted parameter update:
+\[
+\theta\leftarrow(1-\alpha\lambda)\theta,\qquad
+\theta\leftarrow\theta-\alpha_t\frac{m}{\sqrt{v}+\epsilon}.
+\]
+Compute the decay factor once per parameter group per step so that it uses
+the current learning rate. Update parameters and moments in place under
+\texttt{torch.no\_grad()}, using \texttt{mul\_}, \texttt{add\_},
+\texttt{addcmul\_}, and \texttt{addcdiv\_}. The denominator uses a new
+square-root tensor to preserve the stored second moment. If a closure is
+supplied, evaluate it with gradients enabled and return its loss.
 
 
 \problem{adamw\_accounting}{Resource accounting for training with AdamW (2 points)}
@@ -28,35 +77,199 @@
 
 \deliverable{An algebraic expression for each component, as well as the total.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Let $B$ denote batch size, $T$ context length, $V$ vocabulary
+size, $L$ the number of layers, $d$ model width, $h$ the number of attention
+heads, and $f=\frac83d$ the feed-forward width. Assume untied input and output
+embeddings, bias-free projections, and 4 bytes per FP32 element.
+
+The input embedding and LM head contribute $2Vd$ parameters. Each block has
+$4d^2$ attention weights, $3df$ feed-forward weights, and $2d$ RMSNorm weights;
+the final RMSNorm adds another $d$. Thus the parameter count is
+\[
+P=2Vd+L(4d^2+3df+2d)+d
+ =2Vd+L(12d^2+2d)+d.
+\]
+Parameters and gradients each occupy $4P$ bytes. AdamW's two moment tensors
+occupy $8P$ bytes; per-parameter counters are neglected.
+
+For activation accounting, retain one output for each listed operator,
+without checkpointing or fused attention. The per-block element counts are:
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Operator outputs & Elements per block \\
+\midrule
+Two RMSNorms & $2BTd$ \\
+Q, K, V projections & $3BTd$ \\
+Attention scores & $BhT^2$ \\
+Softmax probabilities & $BhT^2$ \\
+Weighted sum of values & $BTd$ \\
+Attention output projection & $BTd$ \\
+FFN gate and value projections & $2BTf$ \\
+SiLU on the gate branch & $BTf$ \\
+Elementwise gate product & $BTf$ \\
+FFN output projection & $BTd$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Each head produces its own $T\times T$ score matrix, giving $BhT^2$ rather
+than $BT^2$ elements. Summing the table gives
+$BT(8d+4f)+2BhT^2$ elements per block. Outside the blocks, count $BTd$ elements
+for final RMSNorm, $BTV$ logits, and one $BTV$ log-probability tensor for
+cross-entropy. The total activation element count is therefore
+\begin{align*}
+A(B)&=B\left[L\left(T(8d+4f)+2hT^2\right)+Td+2TV\right]\\
+&=B\left[L\left(\frac{56}{3}Td+2hT^2\right)+Td+2TV\right].
+\end{align*}
+The resulting memory estimate, in bytes, is
+\[
+\boxed{M(B)=\underbrace{4P}_{\text{parameters}}
+             +\underbrace{4P}_{\text{gradients}}
+             +\underbrace{8P}_{\text{AdamW state}}
+             +\underbrace{4A(B)}_{\text{activations}}.}
+\]
+This is a simplified retained-output estimate rather than an allocator peak
+measurement. It excludes residual additions, RoPE, masks, RMSNorm statistics,
+and implementation-specific temporary buffers; actual backward storage and
+buffer reuse can change the peak.
 
 \textbf{(b)} Instantiate your answer for GPT-2 XL. What is the maximum batch size within 80GB?
 
 \deliverable{An expression of the form $a \cdot \text{batch\_size} + b$, and a number for the maximum batch size.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Substitute $V=50{,}257$, $T=1{,}024$, $L=48$, $d=1{,}600$,
+and $h=25$. Use the exact algebraic ratio $f=\frac83d$ requested in this
+problem, rather than the rounded width of 4,288 in the earlier accounting
+problem. This gives $P=1{,}635{,}537{,}600$ and the following memory breakdown,
+using $1\,\mathrm{GB}=10^9$ bytes:
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Component & Memory (GB) \\
+\midrule
+Parameters & 6.542150400 \\
+Gradients & 6.542150400 \\
+AdamW moments & 13.084300800 \\
+Activations & $16.356614144B$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Consequently,
+\[
+\boxed{M(B)=16.356614144B+26.168601600\quad\mathrm{GB},}
+\qquad
+B_{\max}=\left\lfloor\frac{80-26.168601600}{16.356614144}\right\rfloor
+=\boxed{3}.
+\]
+The estimate is 75.238444032 GB for $B=3$ and 91.595058176 GB for $B=4$.
+If the rounded width $f=4{,}288$ is used instead, then
+$P=1{,}640{,}452{,}800$ and
+$M(B)=16.373391360B+26.247244800$ GB; the maximum batch size remains 3.
 
 \textbf{(c)} How many FLOPs does running one step of AdamW take?
 
 \deliverable{An algebraic expression, with a brief justification.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Count scalar additions, subtractions, multiplications,
+divisions, and square roots as one operation each. Exclude forward/backward
+computation and the scalar hyperparameter arithmetic that does not scale
+with the number of parameter elements. A literal expansion of the algorithm
+has the following costs per parameter element:
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Operation & FLOPs per element \\
+\midrule
+Weight decay: $\theta-(\alpha\lambda)\theta$ & 2 \\
+First moment: $\beta_1m+(1-\beta_1)g$ & 3 \\
+Second moment: $\beta_2v+(1-\beta_2)g^2$ & 4 \\
+Parameter update: $\theta-\alpha_t m/(\sqrt{v}+\epsilon)$ & 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+Thus,
+\[
+F_{\mathrm{AdamW}}\approx14P
+=\boxed{22{,}897{,}526{,}400\ \mathrm{FLOPs}}.
+\]
+The implementation precomputes $1-\alpha\lambda$ once per parameter group,
+so its decay operation needs only one multiplication per element. Under the
+same counting convention, this reduces its cost to
+$13P=21{,}261{,}988{,}800$ FLOPs. The time estimate below uses the literal
+$14P$ convention consistently.
 
 \textbf{(d)} Assuming 50\% MFU on an H100, how long would it take to train GPT-2 XL for 400K steps with batch size 1024?
 
 \deliverable{The number of hours training would take, with a brief justification.}
 
-\textit{Answer:} % TODO: your answer here
+\textit{Answer:} Count the dominant dense matrix multiplications in a forward
+pass, with two FLOPs per multiply-accumulate. Per sequence, the attention
+projections cost $8Td^2$ per layer, the two attention matrix multiplications
+cost $4T^2d$, and the three FFN projections cost $6Tdf$. The LM head adds
+$2TdV$. Therefore,
+\begin{align*}
+F_{\mathrm{forward},1}
+ &=L(8Td^2+4T^2d+6Tdf)+2TdV\\
+ &=L(24Td^2+4T^2d)+2TdV\\
+ &=3{,}506{,}703{,}564{,}800\ \mathrm{FLOPs}.
+\end{align*}
+This approximation omits elementwise forward operations. For $B=1{,}024$,
+assuming backward costs twice forward, one training step costs
+\[
+F_{\mathrm{step}}=3B F_{\mathrm{forward},1}+14P
+=1.0772616248592\times10^{16}\ \mathrm{FLOPs}.
+\]
+The effective throughput at 50\% MFU is
+$0.5\times495\times10^{12}=2.475\times10^{14}$ FLOP/s. Hence,
+\[
+t_{\mathrm{step}}\approx43.525722217\ \mathrm{s},\qquad
+t_{\mathrm{total}}
+=\frac{400{,}000F_{\mathrm{step}}}{(2.475\times10^{14})\,3600}
+\approx\boxed{4{,}836.19\ \mathrm{hours}}
+\approx201.51\ \mathrm{days}.
+\]
+The stipulated batch size of 1,024 exceeds the single-device memory estimate
+in part (b); this is a throughput-based estimate assuming sufficient memory
+or gradient accumulation to achieve the effective batch size. Using the
+rounded FFN width of 4,288 instead gives approximately 4,850.07 hours.
 
 
 \problem{learning\_rate\_schedule}{Implement cosine learning rate schedule with warmup (1 point)}
 
 \deliverable{Write a function that implements the cosine annealing learning rate schedule with warmup.}
 
-\textit{Implementation summary:} % TODO: briefly describe your implementation
+\textit{Implementation summary:} Return a scalar learning rate using three
+branches: linear warmup for $t<T_w$, cosine decay for $T_w\leq t\leq T_c$,
+and the minimum learning rate for $t>T_c$:
+\[
+\alpha(t)=
+\begin{cases}
+\alpha_{\max}\,t/T_w, & t<T_w,\\[2pt]
+\alpha_{\min}+\frac12(\alpha_{\max}-\alpha_{\min})
+\left[1+\cos\left(\pi\frac{t-T_w}{T_c-T_w}\right)\right],
+& T_w\leq t\leq T_c,\\[2pt]
+\alpha_{\min}, & t>T_c.
+\end{cases}
+\]
+Here $T_c$ is the iteration at which decay ends, so the cosine interval has
+length $T_c-T_w$. Its endpoints are $\alpha(T_w)=\alpha_{\max}$ and
+$\alpha(T_c)=\alpha_{\min}$, assuming $T_c>T_w$.
 
 
 \problem{gradient\_clipping}{Implement gradient clipping (1 point)}
 
 \deliverable{Write a function that implements gradient clipping.}
+
+\textit{Implementation summary:} Collect references to all nonempty parameter
+gradients, allowing repeated traversal even when the parameters are supplied
+as an iterator. Return immediately if there are no gradients. Compute a single
+global norm over all parameter elements,
+\[
+G=\sqrt{\sum_{p:\,p.\mathrm{grad}\ne\mathrm{None}}
+                   \sum_i (p.\mathrm{grad}_i)^2}.
+\]
+If $G\geq M$, where $M$ is the maximum norm, multiply every gradient in place
+by the same factor $M/(G+10^{-6})$; otherwise leave the gradients unchanged.
+Using one shared factor bounds the combined norm and preserves the direction
+of the concatenated gradient vector.
 
