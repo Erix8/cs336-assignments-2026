@@ -91,8 +91,10 @@ def adamw_forward_flops_per_sequence(config: AccountingConfig) -> Fraction:
 def adamw_accounting(config: AccountingConfig | None = None) -> None:
     config = AccountingConfig() if config is None else config
     print("AdamW accounting: assignment architecture, FP32, untied embeddings")
-    print(f"V={config.vocab_size}, T={config.context_length}, L={config.num_layers}, "
-          f"d={config.d_model}, h={config.num_heads}, f={config.ff_width}")
+    print(
+        f"V={config.vocab_size}, T={config.context_length}, L={config.num_layers}, "
+        f"d={config.d_model}, h={config.num_heads}, f={config.ff_width}"
+    )
     print("Activations: listed operator outputs retained once; analytical estimate, not measured peak.")
     print("Units: GB = 10^9 bytes. No checkpointing, fused attention, or allocator overhead.\n")
 
@@ -146,7 +148,9 @@ def adamw_accounting(config: AccountingConfig | None = None) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run optimizer experiments and analytical accounting.")
     parser.add_argument(
-        "experiment", nargs="?", default="learning_rate_tuning",
+        "experiment",
+        nargs="?",
+        default="learning_rate_tuning",
         choices=("learning_rate_tuning", "adamw_accounting"),
     )
     parser.add_argument("--d-ff", type=int, help="Override the exact 8*d/3 width, e.g. 4288.")

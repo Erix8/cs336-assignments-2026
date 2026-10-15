@@ -3,15 +3,16 @@ from collections.abc import Iterable
 import torch
 import torch.nn as nn
 from einops import reduce
+from jaxtyping import Float, Int
 from torch import Tensor, sigmoid
 
 
-def silu(x: Tensor) -> Tensor:
+def silu(x: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
     """Apply SiLU elementwise, preserving the input shape."""
     return x * sigmoid(x)
 
 
-def softmax(x: Tensor, dim: int) -> Tensor:
+def softmax(x: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
     """Normalize scores along ``dim`` while preserving the input shape.
 
     Subtracting each maximum before exponentiation avoids overflow for large
@@ -25,7 +26,10 @@ def softmax(x: Tensor, dim: int) -> Tensor:
     return result.movedim(-1, dim)
 
 
-def cross_entropy(inputs: Tensor, targets: Tensor) -> Tensor:
+def cross_entropy(
+    inputs: Float[Tensor, " batch_size vocab_size"],
+    targets: Int[Tensor, " batch_size"],
+) -> Float[Tensor, ""]:
     shifted = inputs - reduce(inputs, "... vocab_size -> ... 1", "max")
     logits_sum = reduce(torch.exp(shifted), "... vocab_size -> ... 1", "sum")
     target_logits = shifted.gather(-1, targets.unsqueeze(-1))
