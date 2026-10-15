@@ -5,7 +5,8 @@
 
 \deliverable{Implement a \texttt{Linear} class that inherits from \texttt{torch.nn.Module} and performs a linear transformation.}
 
-\textit{Implementation summary:} The bias-free weight has shape $(d_{\mathrm{out}}, d_{\mathrm{in}})$; an Einstein summation projects only the final input dimension.
+% Implementation summary:
+The bias-free weight has shape $(d_{\mathrm{out}}, d_{\mathrm{in}})$; an Einstein summation projects only the final input dimension.
 \begin{lstlisting}[caption={Linear projection}]
 def forward(self, x: Tensor) -> Tensor:
     return einsum(x, self.weight, "... d_in, d_out d_in -> ... d_out")
@@ -15,13 +16,25 @@ def forward(self, x: Tensor) -> Tensor:
 
 \deliverable{Implement an \texttt{Embedding} class that inherits from \texttt{torch.nn.Module}.}
 
-\textit{Implementation summary:} A trainable $(V, d_{\mathrm{model}})$ table is initialized from $\mathcal{N}(0,1)$ truncated to $[-3,3]$. Indexing \texttt{self.weight[token\_ids]} maps IDs of shape $(\ldots)$ to embeddings of shape $(\ldots,d_{\mathrm{model}})$.
+% Implementation summary:
+A trainable $(V, d_{\mathrm{model}})$ table
+is initialized from $\mathcal{N}(0,1)$ truncated to $[-3,3]$. Lookup adds an
+embedding dimension to the input shape:
+\[
+E\in\mathbb{R}^{V\times d_{\mathrm{model}}},\qquad
+Y_{\ldots,:}=E_{\mathrm{token\_ids}_{\ldots},:}.
+\]
+\begin{lstlisting}[caption={Embedding lookup}]
+def forward(self, token_ids: Tensor) -> Tensor:
+    return self.weight[token_ids]
+\end{lstlisting}
 
 \problem{rmsnorm}{Root Mean Square Layer Normalization (1 point)}
 
 \deliverable{Implement \texttt{RMSNorm} as a \texttt{torch.nn.Module}.}
 
-\textit{Implementation summary:} I compute $\operatorname{RMSNorm}(x)=g\odot x/\sqrt{\operatorname{mean}(x^2)+\epsilon}$ over the final dimension, with $g$ initialized to ones. The reduction uses float32 for numerical stability, and the result is cast back to the input dtype.
+% Implementation summary:
+I compute $\operatorname{RMSNorm}(x)=g\odot x/\sqrt{\operatorname{mean}(x^2)+\epsilon}$ over the final dimension, with $g$ initialized to ones. The reduction uses float32 for numerical stability, and the result is cast back to the input dtype.
 \begin{lstlisting}[caption={RMSNorm forward pass}]
 in_dtype = x.dtype
 x = x.to(torch.float32)
@@ -34,7 +47,8 @@ return (x / rms * self.weight).to(in_dtype)
 
 \deliverable{Implement the SwiGLU feed-forward network, composed of a SiLU activation and a gated linear unit.}
 
-\textit{Implementation summary:} Three bias-free projections implement $W_2(\operatorname{SiLU}(W_1x)\odot W_3x)$ independently at each token, where $\operatorname{SiLU}(x)=x\sigma(x)$. My default hidden width rounds $8d_{\mathrm{model}}/3$ to the nearest multiple of 64; an explicit \texttt{d\_ff} overrides it.
+% Implementation summary:
+Three bias-free projections implement $W_2(\operatorname{SiLU}(W_1x)\odot W_3x)$ independently at each token, where $\operatorname{SiLU}(x)=x\sigma(x)$. My default hidden width rounds $8d_{\mathrm{model}}/3$ to the nearest multiple of 64; an explicit \texttt{d\_ff} overrides it.
 \begin{lstlisting}[caption={SwiGLU computation}]
 def swiglu(x: Tensor, w1: Linear, w2: Linear, w3: Linear) -> Tensor:
     return w2(silu(w1(x)) * w3(x))
@@ -45,14 +59,29 @@ def swiglu(x: Tensor, w1: Linear, w2: Linear, w3: Linear) -> Tensor:
 
 \deliverable{Implement a class \texttt{RotaryPositionalEmbedding} that applies RoPE to the input tensor.}
 
-\textit{Implementation summary:} The \texttt{RoPE} module caches sine and cosine values for angles $p\theta^{-2i/d_k}$ as nonpersistent buffers. It rotates each adjacent pair $(a,b)$ into $(a\cos\phi-b\sin\phi,\,a\sin\phi+b\cos\phi)$ using the supplied token positions, with float32 arithmetic and output cast back to the input dtype.
+% Implementation summary:
+For position $p$ and adjacent pair index
+$i=0,\ldots,d_k/2-1$, RoPE applies the rotation
+\[
+\phi_{p,i}=p\theta^{-2i/d_k},\qquad
+\begin{pmatrix}a'\\b'\end{pmatrix}
+=\begin{pmatrix}
+\cos\phi_{p,i}&-\sin\phi_{p,i}\\
+\sin\phi_{p,i}&\cos\phi_{p,i}
+\end{pmatrix}
+\begin{pmatrix}a\\b\end{pmatrix}.
+\]
+Sine and cosine tables are cached as nonpersistent buffers and indexed by
+the supplied token positions. Rotation uses float32 arithmetic before
+casting back to the input dtype.
 
 
 \problem{softmax}{Implement softmax (1 point)}
 
 \deliverable{Write a function to apply the softmax operation on a tensor.}
 
-\textit{Implementation summary:} I move the requested dimension to the last axis, subtract its maximum, exponentiate, and divide by the sum before restoring the original axis order. Subtracting the maximum avoids exponential overflow; a slice containing only $-\infty$ still produces NaNs.
+% Implementation summary:
+I move the requested dimension to the last axis, subtract its maximum, exponentiate, and divide by the sum before restoring the original axis order. Subtracting the maximum avoids exponential overflow; a slice containing only $-\infty$ still produces NaNs.
 \begin{lstlisting}[caption={Softmax computation}]
 def softmax(x: Tensor, dim: int) -> Tensor:
     moved = x.movedim(dim, -1)
@@ -66,33 +95,76 @@ def softmax(x: Tensor, dim: int) -> Tensor:
 
 \deliverable{Implement the scaled dot-product attention function.}
 
-\textit{Implementation summary:} I compute $\operatorname{softmax}(QK^\top/\sqrt{d_k})V$ with Einstein summations. A broadcastable boolean mask replaces disallowed scores with $-\infty$ before softmax; each query must retain at least one allowed finite score.
+% Implementation summary:
+Attention normalizes scaled dot products
+over keys, then forms a weighted sum of values:
+\[
+S=\frac{QK^\top}{\sqrt{d_k}},\qquad
+\widetilde S_{ij}=\begin{cases}
+S_{ij},&M_{ij}=\mathrm{True},\\
+-\infty,&M_{ij}=\mathrm{False},
+\end{cases}\qquad
+Y=\operatorname{softmax}(\widetilde S)V.
+\]
+Einstein summations preserve arbitrary leading batch dimensions. The mask
+broadcasts to the score shape; each query must retain at least one allowed
+finite score.
 
 
 \problem{multihead\_self\_attention}{\texorpdfstring{\protect\newline}{}Implement causal multi-head self-attention (5 points)}
 
 \deliverable{Implement causal multi-head self-attention as a \texttt{torch.nn.Module}.}
 
-\textit{Implementation summary:} Separate projections produce $Q,K,V$, which are reshaped into heads with $d_k=d_{\mathrm{model}}/h$. RoPE rotates $Q$ and $K$ when enabled, a lower-triangular mask enforces causality, and concatenated head outputs pass through the output projection; omitted positions default to $0,\ldots,T-1$.
+% Implementation summary:
+Separate projections produce $Q,K,V$;
+each is split into $h$ heads of width $d_k=d_{\mathrm{model}}/h$:
+\[
+(\ldots,T,d_{\mathrm{model}})
+\longrightarrow(\ldots,h,T,d_k).
+\]
+RoPE rotates $Q$ and $K$, using positions $0,\ldots,T-1$ when none are
+provided. A lower-triangular mask enforces causality:
+\[
+M_{ij}=[j\leq i],\qquad
+H_r=\operatorname{Attention}(Q_r,K_r,V_r;M),\qquad
+Y=\operatorname{Concat}(H_1,\ldots,H_h)W_O^\top.
+\]
 
 
 \problem{transformer\_block}{Implement the Transformer block (3 points)}
 
 \deliverable{Transformer block code that passes the provided tests.}
 
-\textit{Implementation summary:} Each block uses pre-normalization and two residual connections: $y=x+\operatorname{Attention}(\operatorname{RMSNorm}_1(x))$, then $z=y+\operatorname{FFN}(\operatorname{RMSNorm}_2(y))$. Both sublayers preserve the input shape.
+% Implementation summary:
+Each block uses pre-normalization and two residual connections:
+\begin{align*}
+y&=x+\operatorname{Attention}(\operatorname{RMSNorm}_1(x)),\\
+z&=y+\operatorname{FFN}(\operatorname{RMSNorm}_2(y)).
+\end{align*}
+Both sublayers preserve the input shape.
 \begin{lstlisting}[caption={Pre-norm Transformer block}]
 def forward(self, x: Tensor) -> Tensor:
     y = x + self.attn(self.ln1(x))
     return y + self.ffn(self.ln2(y))
 \end{lstlisting}
 
-
+\newpage
 \problem{transformer\_lm}{Implementing the Transformer LM (3 points)}
 
 \deliverable{A Transformer LM module that passes the provided tests.}
 
-\textit{Implementation summary:} The \texttt{Transformer} module applies token embeddings, a stack of independent Transformer blocks, final RMSNorm, and a vocabulary projection to produce unnormalized logits of shape $(\ldots,T,V)$. All layers share one fixed RoPE cache, while token embeddings and the output projection use separate trainable weights.
+% Implementation summary:
+The forward pass maps token IDs to
+unnormalized vocabulary logits:
+\begin{align*}
+H_0&=\operatorname{Embedding}(X),\\
+H_\ell&=\operatorname{Block}_\ell(H_{\ell-1}),\quad \ell=1,\ldots,L,\\
+Z&=\operatorname{RMSNorm}_{\mathrm{final}}(H_L)W_{\mathrm{out}}^\top
+\in\mathbb{R}^{B\times T\times V}.
+\end{align*}
+Blocks have independent trainable parameters and share one fixed RoPE
+cache. Input embeddings and the output projection use separate weights;
+softmax is deferred to the loss or sampling routine.
 
 
 \problem{transformer\_accounting}{Transformer LM resource accounting (5 points)}
@@ -107,7 +179,8 @@ for an $(m\times n)(n\times p)$ product.
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} With untied embedding/output weights, no biases, and two RMSNorms per block,
+% Answer:
+With untied embedding/output weights, no biases, and two RMSNorms per block,
 the parameter count is
 \[
 P=2Vd+L(4d^2+3df+2d)+d=1{,}640{,}452{,}800.
@@ -119,7 +192,8 @@ $6.562$ GB ($6.111$ GiB), excluding buffers and activations.
 
 \deliverable{A list of matrix multiplies (with descriptions), and the total number of FLOPs.}
 
-\textit{Answer:} The matrix multiplies and their costs are listed below;
+% Answer:
+The matrix multiplies and their costs are listed below;
 per-layer attention costs are summed over all heads, where $d_k=d/h$.
 \begin{center}
 \small
@@ -148,7 +222,8 @@ Embedding lookup and elementwise operations are excluded.
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} SwiGLU dominates at $57.53\%$ of total FLOPs, followed by
+% Answer:
+SwiGLU dominates at $57.53\%$ of total FLOPs, followed by
 QKV and output projections together at $28.62\%$. The two attention
 matrix multiplies account for $9.16\%$, and the LM head accounts for $4.68\%$.
 
@@ -156,7 +231,8 @@ matrix multiplies account for $9.16\%$, and the LM head accounts for $4.68\%$.
 
 \deliverable{For each model, provide a breakdown of model components and associated FLOPs (as a proportion of total). Include a one-to-two sentence description.}
 
-\textit{Answer:} Using $f$ equal to $8d/3$ rounded to the nearest multiple of 64,
+% Answer:
+Using $f$ equal to $8d/3$ rounded to the nearest multiple of 64,
 the component shares are:
 \begin{center}
 \small
@@ -180,7 +256,8 @@ therefore raises the projection/FFN shares and lowers the attention/LM-head shar
 
 \deliverable{A one-to-two sentence response.}
 
-\textit{Answer:} Increasing $T$ by $16\times$ multiplies projection, FFN,
+% Answer:
+Increasing $T$ by $16\times$ multiplies projection, FFN,
 and LM-head FLOPs by 16, but attention FLOPs by 256:
 \[
 F_{\mathrm{new}}

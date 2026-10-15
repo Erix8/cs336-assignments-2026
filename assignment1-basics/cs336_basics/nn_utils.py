@@ -12,7 +12,7 @@ def silu(x: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
     return x * sigmoid(x)
 
 
-def softmax(x: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
+def softmax(x: Float[Tensor, " ..."], dim: int = -1) -> Float[Tensor, " ..."]:
     """Normalize scores along ``dim`` while preserving the input shape.
 
     Subtracting each maximum before exponentiation avoids overflow for large

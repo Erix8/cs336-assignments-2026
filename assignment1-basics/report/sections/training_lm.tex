@@ -4,21 +4,30 @@
 
 \deliverable{Write a function to compute the cross-entropy loss.}
 
-\textit{Implementation summary:} For each prediction, subtract the maximum
-logit along the vocabulary dimension to obtain shifted logits $s$. Compute
-the loss as $\log\sum_j \exp(s_j)-s_y$, where $y$ is the target token index;
-this cancels the target's log and exponential and avoids exponential overflow.
-Use \texttt{gather} along the last dimension to select $s_y$, preserving a
-singleton vocabulary dimension so that the subtraction has matching shapes,
-then average over all batch dimensions. The provided
-\texttt{test\_cross\_entropy} passed, including its large-logit case.
+% Implementation summary:
+Subtracting each prediction's maximum
+logit avoids exponential overflow without changing the loss. For $n$
+predictions and targets $y_b$,
+\[
+s_{bj}=z_{bj}-\max_k z_{bk},\qquad
+\mathcal{L}=\frac1n\sum_{b=1}^{n}
+\left[\log\sum_j\exp(s_{bj})-s_{b,y_b}\right].
+\]
+The target lookup retains a singleton vocabulary axis for matching shapes:
+\begin{lstlisting}[caption={Stable cross-entropy after shifting logits}]
+logits_sum = reduce(torch.exp(shifted), "... vocab_size -> ... 1", "sum")
+target_logits = shifted.gather(-1, targets.unsqueeze(-1))
+return (torch.log(logits_sum) - target_logits).mean()
+\end{lstlisting}
+The provided test passed, including its large-logit case.
 
 
 \problem{learning\_rate\_tuning}{Tuning the learning rate (1 point)}
 
 \deliverable{Run the SGD example with learning rates 1e1, 1e2, and 1e3 for 10 iterations. What happens?}
 
-\textit{Answer:} Compared with the slow loss decrease at $\alpha=1$, $\alpha=10$
+% Answer:
+Compared with the slow loss decrease at $\alpha=1$, $\alpha=10$
 decreased the loss faster and $\alpha=100$ reached approximately zero within
 10 iterations (the first update left the loss essentially unchanged).
 At $\alpha=1000$, the loss diverged, increasing from about $24.17$ to
@@ -48,7 +57,8 @@ and after each of 10 updates.
 
 \deliverable{Implement the AdamW optimizer as a subclass of \texttt{torch.optim.Optimizer}.}
 
-\textit{Implementation summary:} Subclass \texttt{torch.optim.Optimizer},
+% Implementation summary:
+Subclass \texttt{torch.optim.Optimizer},
 validate the hyperparameters, and store their defaults in parameter groups.
 For each parameter with a gradient, lazily initialize its first and second
 moment tensors to zero and maintain a separate update counter starting at 1.
@@ -63,12 +73,19 @@ Apply decoupled weight decay before the moment-adjusted parameter update:
 \theta\leftarrow(1-\alpha\lambda)\theta,\qquad
 \theta\leftarrow\theta-\alpha_t\frac{m}{\sqrt{v}+\epsilon}.
 \]
-Compute the decay factor once per parameter group per step so that it uses
-the current learning rate. Update parameters and moments in place under
-\texttt{torch.no\_grad()}, using \texttt{mul\_}, \texttt{add\_},
-\texttt{addcmul\_}, and \texttt{addcdiv\_}. The denominator uses a new
-square-root tensor to preserve the stored second moment. If a closure is
-supplied, evaluate it with gradients enabled and return its loss.
+The update runs under \texttt{torch.no\_grad()}; the decay factor is computed
+once per parameter group using its current learning rate:
+\begin{lstlisting}[caption={In-place AdamW update for one parameter}]
+lr_t = lr * sqrt(1 - beta_2**t) / (1 - beta_1**t)
+p.mul_(decay_factor)
+m.mul_(beta_1).add_(grad, alpha=1 - beta_1)
+v.mul_(beta_2).addcmul_(grad, grad, value=1 - beta_2)
+denom = v.sqrt().add_(eps)
+p.addcdiv_(m, denom, value=-lr_t)
+\end{lstlisting}
+Taking a separate square-root tensor preserves the stored second moment.
+An optional closure is evaluated with gradients enabled, and its loss is
+returned.
 
 
 \problem{adamw\_accounting}{Resource accounting for training with AdamW (2 points)}
@@ -77,7 +94,8 @@ supplied, evaluate it with gradients enabled and return its loss.
 
 \deliverable{An algebraic expression for each component, as well as the total.}
 
-\textit{Answer:} Let $B$ denote batch size, $T$ context length, $V$ vocabulary
+% Answer:
+Let $B$ denote batch size, $T$ context length, $V$ vocabulary
 size, $L$ the number of layers, $d$ model width, $h$ the number of attention
 heads, and $f=\frac83d$ the feed-forward width. Assume untied input and output
 embeddings, bias-free projections, and 4 bytes per FP32 element.
@@ -137,7 +155,8 @@ buffer reuse can change the peak.
 
 \deliverable{An expression of the form $a \cdot \text{batch\_size} + b$, and a number for the maximum batch size.}
 
-\textit{Answer:} Substitute $V=50{,}257$, $T=1{,}024$, $L=48$, $d=1{,}600$,
+% Answer:
+Substitute $V=50{,}257$, $T=1{,}024$, $L=48$, $d=1{,}600$,
 and $h=25$. Use the exact algebraic ratio $f=\frac83d$ requested in this
 problem, rather than the rounded width of 4,288 in the earlier accounting
 problem. This gives $P=1{,}635{,}537{,}600$ and the following memory breakdown,
@@ -170,7 +189,8 @@ $M(B)=16.373391360B+26.247244800$ GB; the maximum batch size remains 3.
 
 \deliverable{An algebraic expression, with a brief justification.}
 
-\textit{Answer:} Count scalar additions, subtractions, multiplications,
+% Answer:
+Count scalar additions, subtractions, multiplications,
 divisions, and square roots as one operation each. Exclude forward/backward
 computation and the scalar hyperparameter arithmetic that does not scale
 with the number of parameter elements. A literal expansion of the algorithm
@@ -202,7 +222,8 @@ $14P$ convention consistently.
 
 \deliverable{The number of hours training would take, with a brief justification.}
 
-\textit{Answer:} Count the dominant dense matrix multiplications in a forward
+% Answer:
+Count the dominant dense matrix multiplications in a forward
 pass, with two FLOPs per multiply-accumulate. Per sequence, the attention
 projections cost $8Td^2$ per layer, the two attention matrix multiplications
 cost $4T^2d$, and the three FFN projections cost $6Tdf$. The LM head adds
@@ -238,7 +259,8 @@ rounded FFN width of 4,288 instead gives approximately 4,850.07 hours.
 
 \deliverable{Write a function that implements the cosine annealing learning rate schedule with warmup.}
 
-\textit{Implementation summary:} Return a scalar learning rate using three
+% Implementation summary:
+Return a scalar learning rate using three
 branches: linear warmup for $t<T_w$, cosine decay for $T_w\leq t\leq T_c$,
 and the minimum learning rate for $t>T_c$:
 \[
@@ -260,7 +282,8 @@ $\alpha(T_c)=\alpha_{\min}$, assuming $T_c>T_w$.
 
 \deliverable{Write a function that implements gradient clipping.}
 
-\textit{Implementation summary:} Collect references to all nonempty parameter
+% Implementation summary:
+Collect references to all nonempty parameter
 gradients, allowing repeated traversal even when the parameters are supplied
 as an iterator. Return immediately if there are no gradients. Compute a single
 global norm over all parameter elements,
@@ -268,8 +291,13 @@ global norm over all parameter elements,
 G=\sqrt{\sum_{p:\,p.\mathrm{grad}\ne\mathrm{None}}
                    \sum_i (p.\mathrm{grad}_i)^2}.
 \]
-If $G\geq M$, where $M$ is the maximum norm, multiply every gradient in place
-by the same factor $M/(G+10^{-6})$; otherwise leave the gradients unchanged.
-Using one shared factor bounds the combined norm and preserves the direction
-of the concatenated gradient vector.
+With maximum norm $M$ and $\epsilon=10^{-6}$, apply one shared scale:
+\[
+g_p\leftarrow\begin{cases}
+\dfrac{M}{G+\epsilon}g_p,&G\geq M,\\[4pt]
+g_p,&G<M.
+\end{cases}
+\]
+Scaling all gradients in place bounds the combined norm while preserving
+the direction of the concatenated gradient vector.
 
