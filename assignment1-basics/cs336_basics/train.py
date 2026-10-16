@@ -190,6 +190,18 @@ def parse_args() -> argparse.Namespace:
         help="Evaluate every N updates.",
     )
     logging_args.add_argument(
+        "--eval-batch-size",
+        type=int,
+        default=16,
+        help="Sequences per validation batch, independent of training batch size.",
+    )
+    logging_args.add_argument(
+        "--eval-seed",
+        type=int,
+        default=42,
+        help="Seed for fixed validation samples, independent of training sampling.",
+    )
+    logging_args.add_argument(
         "--eval-batches",
         type=int,
         default=20,
@@ -235,6 +247,7 @@ def parse_args() -> argparse.Namespace:
         "max_steps",
         "log_interval",
         "eval_interval",
+        "eval_batch_size",
         "eval_batches",
         "save_interval",
     ):
@@ -259,6 +272,8 @@ def parse_args() -> argparse.Namespace:
         parser.error("--weight-decay must be nonnegative")
     if not 0 <= args.seed < 2**32:
         parser.error("--seed must be in [0, 2**32)")
+    if not 0 <= args.eval_seed < 2**32:
+        parser.error("--eval-seed must be in [0, 2**32)")
     try:
         torch.device(args.device)
     except (RuntimeError, ValueError) as exc:
@@ -277,15 +292,18 @@ def evaluate(
     args: argparse.Namespace,
 ) -> float:
     was_training = model.training
+    # Restart a private generator so every evaluation sees the same validation windows.
+    rng = np.random.default_rng(args.eval_seed)
     model.eval()
     try:
         losses = []
         for _ in range(args.eval_batches):
             inputs, targets = data_loading(
                 dataset=dataset,
-                batch_size=args.batch_size,
+                batch_size=args.eval_batch_size,
                 context_length=args.context_length,
                 device=args.device,
+                rng=rng,
             )
             logits: Tensor = model(inputs)
             loss = cross_entropy(

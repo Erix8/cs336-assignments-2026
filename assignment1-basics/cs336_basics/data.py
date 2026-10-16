@@ -8,8 +8,10 @@ def data_loading(
     batch_size: int,
     context_length: int,
     device: str,
+    rng: np.random.Generator | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    starts = np.random.randint(
+    sample_starts = np.random.randint if rng is None else rng.integers
+    starts = sample_starts(
         low=0,
         high=len(dataset) - context_length,
         size=batch_size,
