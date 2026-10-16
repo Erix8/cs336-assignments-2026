@@ -95,21 +95,31 @@ class FeedForward(nn.Module):
         self,
         d_model: int,
         d_ff: int | None = None,
+        ffn_type: str = "swiglu",
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ):
         super().__init__()
+        if ffn_type not in ("swiglu", "silu"):
+            raise ValueError("ffn_type must be 'swiglu' or 'silu'")
         self.d_model = d_model
-        self.d_ff = round(8 * d_model / 192) * 64 if d_ff is None else d_ff
+        self.ffn_type = ffn_type
+        self.d_ff = d_ff
+        if self.d_ff is None:
+            self.d_ff = round(8 * d_model / 192) * 64 if self.ffn_type=="swiglu" else 4*d_model
         self.w1 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype)
         self.w2 = Linear(self.d_ff, self.d_model, device=device, dtype=dtype)
-        self.w3 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype)
+        if self.ffn_type == "swiglu":
+            self.w3 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype) 
 
     def forward(
         self,
         x: Float[Tensor, " ... d_model"],
     ) -> Float[Tensor, " ... d_model"]:
-        return self.w2(silu(self.w1(x)) * self.w3(x))
+        if self.ffn_type == "swiglu":
+            return self.w2(silu(self.w1(x)) * self.w3(x))
+        elif self.ffn_type == "silu":
+            return self.w2(silu(self.w1(x)))
 
 
 class RoPE(nn.Module):
@@ -252,22 +262,32 @@ class TransformerBlock(nn.Module):
         rope: RoPE | None = None,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
+        use_rmsnorm: bool = True,
+        norm_position: str = "pre",
+        ffn_type: str = "swiglu",
     ):
         super().__init__()
+        if norm_position not in ("pre", "post"):
+            raise ValueError("norm_position must be 'pre' or 'post'")
         self.rope = rope
         if self.rope is None and theta is not None:
             self.rope = RoPE(theta, d_model // num_heads, max_seq_len, device=device)
-        self.ln1 = RMSNorm(d_model, device=device, dtype=dtype)
+        self.ln1 = RMSNorm(d_model, device=device, dtype=dtype) if use_rmsnorm else nn.Identity()
         self.attn = MultiHeadSelfAttention(d_model, num_heads, device=device, dtype=dtype, rope=self.rope)
-        self.ln2 = RMSNorm(d_model, device=device, dtype=dtype)
-        self.ffn = FeedForward(d_model, d_ff, device=device, dtype=dtype)
+        self.ln2 = RMSNorm(d_model, device=device, dtype=dtype) if use_rmsnorm else nn.Identity()
+        self.ffn = FeedForward(d_model, d_ff, ffn_type=ffn_type,device=device, dtype=dtype)
+        self.norm_position = norm_position
 
     def forward(
         self,
         x: Float[Tensor, " batch sequence_length d_model"],
     ) -> Float[Tensor, " batch sequence_length d_model"]:
-        y = x + self.attn(self.ln1(x))
-        return y + self.ffn(self.ln2(y))
+        if self.norm_position == "pre":
+            y = x + self.attn(self.ln1(x))
+            return y + self.ffn(self.ln2(y))
+        elif self.norm_position == "post":
+            y = self.ln1(x+self.attn(x))
+            return self.ln2(y+self.ffn(y))
 
 
 class Transformer(nn.Module):
@@ -289,10 +309,14 @@ class Transformer(nn.Module):
         rope_theta: float,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
+        use_rmsnorm: bool = True,
+        norm_position: str = "pre",
+        use_rope: bool = True,
+        ffn_type: str = "swiglu",
     ):
         super().__init__()
         self.token_embeddings = Embedding(vocab_size, d_model, device=device, dtype=dtype)
-        self.rope = RoPE(rope_theta, d_model // num_heads, context_length, device=device)
+        self.rope = RoPE(rope_theta, d_model // num_heads, context_length, device=device) if use_rope else None
         self.layers = nn.ModuleList(
             [
                 TransformerBlock(
@@ -303,12 +327,15 @@ class Transformer(nn.Module):
                     device=device,
                     dtype=dtype,
                     rope=self.rope,
+                    use_rmsnorm=use_rmsnorm,
+                    norm_position=norm_position,
+                    ffn_type=ffn_type
                 )
                 for _ in range(num_layers)
             ]
         )
 
-        self.ln_final = RMSNorm(d_model, device=device, dtype=dtype)
+        self.ln_final = RMSNorm(d_model, device=device, dtype=dtype) if use_rmsnorm else nn.Identity()
         self.lm_head = Linear(d_model, vocab_size, device=device, dtype=dtype)
 
     def forward(

@@ -86,6 +86,30 @@ def parse_args() -> argparse.Namespace:
         default=10000.0,
         help="RoPE frequency base.",
     )
+    model.add_argument(
+        "--use-rope",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Apply RoPE to attention queries and keys.",
+    )
+    model.add_argument(
+        "--ffn-type",
+        choices=("swiglu", "silu"),
+        default="swiglu",
+        help="Feed-forward variant; use --d-ff 2048 for SiLU at d-model 512.",
+    )
+    model.add_argument(
+        "--use-rmsnorm",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use RMSNorm in every block and before the output projection.",
+    )
+    model.add_argument(
+        "--norm-position",
+        choices=("pre", "post"),
+        default="pre",
+        help="Apply block RMSNorm before each sublayer or after its residual addition.",
+    )
 
     training = parser.add_argument_group("Training")
     training.add_argument(
@@ -315,7 +339,19 @@ def train(
     completed_steps = start_step
     model_config = {
         name: getattr(args, name)
-        for name in ("vocab_size", "context_length", "d_model", "num_layers", "num_heads", "d_ff", "rope_theta")
+        for name in (
+            "vocab_size",
+            "context_length",
+            "d_model",
+            "num_layers",
+            "num_heads",
+            "d_ff",
+            "rope_theta",
+            "use_rmsnorm",
+            "norm_position",
+            "use_rope",
+            "ffn_type",
+        )
     }
     synchronize_device(args.device)
     started_at = interval_started_at = perf_counter()
@@ -427,6 +463,10 @@ def main():
         args.num_heads,
         args.d_ff,
         args.rope_theta,
+        use_rmsnorm=args.use_rmsnorm,
+        norm_position=args.norm_position,
+        use_rope=args.use_rope,
+        ffn_type=args.ffn_type,
     )
     model.to(device=args.device)
     optimizer = AdamW(

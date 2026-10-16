@@ -10,7 +10,7 @@ def save_checkpoint(
     optimizer: torch.optim.Optimizer,
     iteration: int,
     out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes],
-    model_config: dict[str, int | float] | None = None,
+    model_config: dict[str, int | float | bool | str] | None = None,
 ):
     obj = {}
     obj["model"] = model.state_dict()
