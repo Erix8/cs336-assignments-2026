@@ -151,10 +151,18 @@ def main():
             args.temperature,
             args.top_p,
         )
-    if generated_ids and generated_ids[-1] == args.eos_token_id:
+    generated_token_count = len(generated_ids)
+    stopped_on_eos = bool(generated_ids and generated_ids[-1] == args.eos_token_id)
+    if stopped_on_eos:
         generated_ids = generated_ids[:-1]
     generated_text = tokenizer.decode(generated_ids)
     print(args.prompt + generated_text)
+    print(
+        f"\nGeneration stats: prompt_tokens={len(prompt_ids)} "
+        f"generated_tokens={generated_token_count} "
+        f"generated_text_tokens={len(generated_ids)} "
+        f"stop_reason={'eos' if stopped_on_eos else 'max_new_tokens'}"
+    )
 
 
 if __name__ == "__main__":

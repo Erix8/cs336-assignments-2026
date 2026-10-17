@@ -1,8 +1,10 @@
+\Needspace{12\baselineskip}
 \section{Byte-Pair Encoding (BPE) Tokenizer}
 % ======================================================================
 
 \problem{unicode1}{Understanding Unicode}{1}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} What Unicode character does \texttt{chr(0)} return?
 
 \deliverable{A one-sentence response.}
@@ -10,6 +12,7 @@
 % Answer:
 \texttt{chr(0)} returns the Null character (U+0000), whose \texttt{repr} is \texttt{'\textbackslash x00'}.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} How does this character's string representation (\texttt{\_\_repr\_\_()}) differ from its printed representation?
 
 \deliverable{A one-sentence response.}
@@ -17,6 +20,7 @@
 % Answer:
 \texttt{\_\_repr\_\_()} produces a visible escape sequence \texttt{'\textbackslash x00'}, while \texttt{print()} renders it as an invisible character that occupies a position but displays nothing.
 
+\Needspace{6\baselineskip}
 \textbf{(c)} What happens when this character occurs in text?
 
 \deliverable{A one-sentence response.}
@@ -29,25 +33,31 @@ appears as \texttt{this is a teststring} even though the string length is 21, no
 
 \problem{unicode2}{Unicode Encodings}{3}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} What are some reasons to prefer training our tokenizer on UTF-8 encoded bytes, rather than UTF-16 or UTF-32?
 
 \deliverable{A one-to-two sentence response.}
 
 % Answer:
-UTF-8 gives the smallest initial vocabulary (256 byte values) and the shortest initial byte sequences for ASCII-heavy text, both of which make BPE training more efficient; UTF-16 would require a 65{,}536-entry initial vocabulary and double the sequence length for ASCII, and UTF-32 would be far worse.
+For ASCII-heavy text, UTF-8 uses one byte per character, compared with two in UTF-16 and four in UTF-32 (excluding any byte-order mark), making the initial sequences shorter and avoiding the many zero bytes introduced by these encodings. Byte-level BPE starts from the same 256 byte values for all three encodings; UTF-8 also avoids byte-order ambiguity.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} Why is \texttt{decode\_utf8\_bytes\_to\_str\_wrong} incorrect? Provide an example input byte string that yields incorrect results.
 
 \deliverable{An example input byte string, with a one-sentence explanation.}
 
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Incorrect UTF-8 decoding function}]
 def decode_utf8_bytes_to_str_wrong(bytestring: bytes):
     return "".join([bytes([b]).decode("utf-8") for b in bytestring])
 \end{lstlisting}
+\end{minipage}\par
 
 % Answer:
-The function tries to decode each byte individually, but multi-byte UTF-8 characters cannot be split across single bytes. For example, encoding the Chinese word for ``hello'' with UTF-8 produces \texttt{b'\textbackslash xe4\textbackslash xbd\textbackslash xa0\textbackslash xe5\textbackslash xbd\textbackslash xbd'}, where each character is encoded as 3 bytes; decoding any single byte raises \texttt{UnicodeDecodeError} because a continuation byte is meaningless without its leading byte.
+The function tries to decode each byte individually, but multi-byte UTF-8 characters cannot be split across single bytes. For example, encoding the Chinese word for ``hello'' with UTF-8 produces \texttt{b'\textbackslash xe4\textbackslash xbd\textbackslash xa0\textbackslash xe5\textbackslash xa5\textbackslash xbd'}, where each character is encoded as 3 bytes; decoding any single byte raises \texttt{UnicodeDecodeError} because a continuation byte is meaningless without its leading byte.
 
+\Needspace{6\baselineskip}
 \textbf{(c)} Give a two-byte sequence that does not decode to any Unicode character(s).
 
 \deliverable{An example, with a one-sentence explanation.}
@@ -55,11 +65,12 @@ The function tries to decode each byte individually, but multi-byte UTF-8 charac
 % Answer:
 \texttt{b'\textbackslash x80\textbackslash x80'} does not decode to any Unicode character. Both bytes are continuation bytes (\texttt{0x80}--\texttt{0xBF}), which must follow a leading byte; a sequence of only continuation bytes is invalid UTF-8.
 
-\newpage
 \problem{train\_bpe}{BPE Tokenizer Training}{15}
 
 \deliverable{Write a function that, given a path to an input text file, trains a (byte-level) BPE tokenizer.}
 
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={BPE training function}]
 def train_bpe(
     input_path: str,
@@ -71,6 +82,7 @@ def train_bpe(
     del freq_table
     return trainer.train(vocab_size)
 \end{lstlisting}
+\end{minipage}\par
 
 % Implementation summary:
 I split the corpus at document boundaries and pre-tokenize it in parallel, then initialize the vocabulary with the special tokens and all 256 byte values. 
@@ -79,6 +91,7 @@ Training ends when the vocabulary reaches the requested size.
 
 \problem{train\_bpe\_tinystories}{BPE Training on TinyStories}{2}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} Train a byte-level BPE tokenizer on TinyStories with a maximum vocabulary size of 10{,}000. How much time and memory did training take? What is the longest token in the vocabulary?
 
 \deliverable{A one-to-two sentence response.}
@@ -87,6 +100,7 @@ Training ends when the vocabulary reaches the requested size.
 Training the 10K-token TinyStories tokenizer took approximately 109 seconds and reached a maximum resident set size of 0.80 GiB. 
 The longest non-special tokens were `` accomplishment,'' `` disappointment,'' and `` responsibility,'' each 15 bytes long, which is reasonable because they are frequent words merged together with their leading spaces.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} Profile your code. What part of the tokenizer training process takes the most time?
 
 \deliverable{A one-to-two sentence response.}
@@ -97,6 +111,7 @@ Pre-tokenization was the main end-to-end bottleneck, taking 82.15 of the 108.99 
 
 \problem{train\_bpe\_expts\_owt}{BPE Training on OpenWebText}{2}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} Train a byte-level BPE tokenizer on OpenWebText with a maximum vocabulary size of 32{,}000. What is the longest token in the vocabulary?
 
 \deliverable{A one-to-two sentence response.}
@@ -106,6 +121,7 @@ Training the 32K-token OpenWebText tokenizer took 23{,}321.57 seconds and peaked
 The longest non-special tokens are tied at 64 bytes: a run of hyphens, likely used as a separator, and 16 repetitions of the byte pattern \texttt{C3 83 C3 82}, 
 which appears to reflect character-encoding artifacts in web text.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} Compare and contrast the tokenizer that you get training on TinyStories versus OpenWebText.
 
 \deliverable{A one-to-two sentence response.}
@@ -130,6 +146,8 @@ special token, then applies BPE independently within each GPT-2 pre-token:
 \]
 The merge loop always selects the adjacent pair with the smallest training
 rank, stopping when no applicable merge remains.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={BPE encoding within one pre-token}]
 while len(pretoken) >= 2:
     selected_pair = self._find_best_merge_pair(pretoken)
@@ -137,17 +155,22 @@ while len(pretoken) >= 2:
         break
     pretoken = self._merge_selected_pair(pretoken, selected_pair)
 \end{lstlisting}
+\end{minipage}\par
 The streaming encoder retains unfinished pre-tokens and possible special-token
 prefixes across chunks. Decoding joins bytes before interpreting UTF-8,
 because one character can span several tokens:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Byte-level decoding}]
 token_bytes = b"".join(self.vocab[token_id] for token_id in ids)
 return token_bytes.decode("utf-8", errors="replace")
 \end{lstlisting}
+\end{minipage}\par
 
 
 \problem{tokenizer\_experiments}{Experiments with tokenizers}{4}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} Sample 10 documents from TinyStories and OpenWebText. What is each tokenizer's compression ratio (bytes/token)?
 
 \deliverable{A one-to-two sentence response.}
@@ -155,6 +178,7 @@ return token_bytes.decode("utf-8", errors="replace")
 % Answer:
 Excluding document separators, the TinyStories tokenizer achieved 4.019 bytes per token on 10 sampled TinyStories documents (8{,}484 bytes / 2{,}111 tokens). The OpenWebText tokenizer achieved 3.774 bytes per token on 10 sampled OpenWebText documents (93{,}516 bytes / 24{,}778 tokens).
 
+\Needspace{6\baselineskip}
 \textbf{(b)} What happens if you tokenize your OpenWebText sample with the TinyStories tokenizer?
 
 \deliverable{A one-to-two sentence response.}
@@ -162,6 +186,7 @@ Excluding document separators, the TinyStories tokenizer achieved 4.019 bytes pe
 % Answer:
 On the same 10 OpenWebText documents, the TinyStories tokenizer achieved 2.816 bytes/token (93{,}516 bytes / 33{,}213 tokens), compared with 3.774 bytes/token for the OpenWebText tokenizer. It used about 34\% more tokens for this sample.
 
+\Needspace{6\baselineskip}
 \textbf{(c)} Estimate the throughput of your tokenizer (bytes/second). How long would it take to tokenize the Pile (825GB)?
 
 \deliverable{A one-to-two sentence response.}
@@ -170,6 +195,7 @@ On the same 10 OpenWebText documents, the TinyStories tokenizer achieved 2.816 b
 On my machine (macOS + Apple M4 + 16GB RAM), the OpenWebText tokenizer encoded the cached 10-document sample at about 1.67 MB/s (1{,}668{,}392 bytes/s) over repeated in-memory passes. 
 At that rate, tokenizing 825 GB would take about 137 hours (5.7 days), excluding file I/O and variation across documents.
 
+\Needspace{6\baselineskip}
 \textbf{(d)} Using the tokenizers to encode the respective training and 
 development datasets into a sequence of integer token IDs. Why serializing the token IDs as a NumPy array of 
 datatype \texttt{uint16} is an appropriate choice?

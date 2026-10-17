@@ -12,7 +12,7 @@ from time import perf_counter
 
 from tqdm import tqdm
 
-from cs336_basics.bpe_training import BPETrainer, Pair, count_pretokens
+from cs336_basics.train_bpe import BPETrainer, Pair, count_pretokens
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TOKENIZER_OUTPUT_DIR = PROJECT_ROOT / "data" / "tokenizers"

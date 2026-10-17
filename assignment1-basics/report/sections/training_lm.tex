@@ -1,3 +1,4 @@
+\Needspace{12\baselineskip}
 \section{Training a Transformer LM}
 % ======================================================================
 \problem{cross\_entropy}{Implement cross-entropy}{1}
@@ -14,11 +15,14 @@ s_{bj}=z_{bj}-\max_k z_{bk},\qquad
 \left[\log\sum_j\exp(s_{bj})-s_{b,y_b}\right].
 \]
 The target lookup retains a singleton vocabulary axis for matching shapes:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Stable cross-entropy after shifting logits}]
 logits_sum = reduce(torch.exp(shifted), "... vocab_size -> ... 1", "sum")
 target_logits = shifted.gather(-1, targets.unsqueeze(-1))
 return (torch.log(logits_sum) - target_logits).mean()
 \end{lstlisting}
+\end{minipage}\par
 The provided test passed, including its large-logit case.
 
 
@@ -75,6 +79,8 @@ Apply decoupled weight decay before the moment-adjusted parameter update:
 \]
 The update runs under \texttt{torch.no\_grad()}; the decay factor is computed
 once per parameter group using its current learning rate:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={In-place AdamW update for one parameter}]
 lr_t = lr * sqrt(1 - beta_2**t) / (1 - beta_1**t)
 p.mul_(decay_factor)
@@ -83,6 +89,7 @@ v.mul_(beta_2).addcmul_(grad, grad, value=1 - beta_2)
 denom = v.sqrt().add_(eps)
 p.addcdiv_(m, denom, value=-lr_t)
 \end{lstlisting}
+\end{minipage}\par
 Taking a separate square-root tensor preserves the stored second moment.
 An optional closure is evaluated with gradients enabled, and its loss is
 returned.
@@ -90,6 +97,7 @@ returned.
 
 \problem{adamw\_accounting}{Resource accounting for training with AdamW}{2}
 
+\Needspace{6\baselineskip}
 \textbf{(a)} How much peak memory does running AdamW require? Decompose into parameters, activations, gradients, and optimizer state.
 
 \deliverable{An algebraic expression for each component, as well as the total.}
@@ -151,6 +159,7 @@ measurement. It excludes residual additions, RoPE, masks, RMSNorm statistics,
 and implementation-specific temporary buffers; actual backward storage and
 buffer reuse can change the peak.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} Instantiate your answer for GPT-2 XL. What is the maximum batch size within 80GB?
 
 \deliverable{An expression of the form $a \cdot \text{batch\_size} + b$, and a number for the maximum batch size.}
@@ -185,6 +194,7 @@ If the rounded width $f=4{,}288$ is used instead, then
 $P=1{,}640{,}452{,}800$ and
 $M(B)=16.373391360B+26.247244800$ GB; the maximum batch size remains 3.
 
+\Needspace{6\baselineskip}
 \textbf{(c)} How many FLOPs does running one step of AdamW take?
 
 \deliverable{An algebraic expression, with a brief justification.}
@@ -218,6 +228,7 @@ same counting convention, this reduces its cost to
 $13P=21{,}261{,}988{,}800$ FLOPs. The time estimate below uses the literal
 $14P$ convention consistently.
 
+\Needspace{6\baselineskip}
 \textbf{(d)} Assuming 50\% MFU on an H100, how long would it take to train GPT-2 XL for 400K steps with batch size 1024?
 
 \deliverable{The number of hours training would take, with a brief justification.}

@@ -19,6 +19,20 @@
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{needspace}
+\usepackage{placeins}
+\usepackage[title,titletoc]{appendix}
+
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\setlength{\emergencystretch}{1em}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\captionsetup{font=small,skip=6pt,justification=raggedright,singlelinecheck=false}
 
 % ---------- Hyperref setup ----------
 \hypersetup{
@@ -45,6 +59,7 @@
 
 % ---------- Convenience macros ----------
 \newcommand{\problem}[3]{%
+    \Needspace{5\baselineskip}%
     \subsection*{\raggedright Problem (\texttt{#1}): #2 (#3 point\ifnum#3=1\else s\fi)}%
     \addcontentsline{toc}{subsection}{Problem: #2 (#3 point\ifnum#3=1\else s\fi)}%
 }
@@ -70,12 +85,29 @@
 
 % --- Section files ---
 \input{sections/bpe_tokenizer}
+\FloatBarrier
 \input{sections/transformer_architecture}
+\FloatBarrier
 \input{sections/training_lm}
+\FloatBarrier
 \input{sections/training_loop}
+\FloatBarrier
 \input{sections/generating_text}
+\FloatBarrier
 \input{sections/hyperparams}
+\FloatBarrier
 \input{sections/ablations}
+\FloatBarrier
+\input{sections/owt_experiment}
 \input{sections/leaderboard}
+
+\clearpage
+\begin{appendices}
+\input{appendices/experiment_details}
+\input{appendices/standard_protocol}
+\input{appendices/diagnostics}
+\input{appendices/standard_samples}
+\input{appendices/low_resource_samples}
+\end{appendices}
 
 \end{document}

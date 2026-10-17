@@ -1,0 +1,353 @@
+\Needspace{12\baselineskip}
+\section{Complete standard-budget generations}
+\label{app:standard_samples}
+
+All 18 outputs are reproduced below, grouped by dataset, prompt, and
+sampling temperature. Each includes the prompt. Generation uses the final
+327.68M-token checkpoint, CUDA, seed 42 reset for each invocation,
+top-$p=0.9$, and at most 256 new tokens. Terminal EOS is not printed;
+length-limited text is left truncated. Text and spelling are preserved,
+with quotation marks and dashes normalized for typesetting.
+
+
+\begin{table}[htbp]
+    \centering\small
+    \begin{tabular}{@{}crrlrl@{}}
+        \toprule
+        & & \multicolumn{2}{c}{TinyStories} & \multicolumn{2}{c}{OWT} \\
+        \cmidrule(lr){3-4}\cmidrule(l){5-6}
+        Prompt & Temp. & Sampled/text & Stop & Sampled/text & Stop \\
+        \midrule
+        P1 & 0.7 & 140/139 & EOS & 256/256 & Limit \\
+        P1 & 1.0 & 204/203 & EOS & 256/256 & Limit \\
+        P1 & 1.3 & 256/256 & Limit & 256/256 & Limit \\
+        P2 & 0.7 & 224/223 & EOS & 256/256 & Limit \\
+        P2 & 1.0 & 231/230 & EOS & 153/152 & EOS \\
+        P2 & 1.3 & 32/31 & EOS & 183/182 & EOS \\
+        P3 & 0.7 & 61/60 & EOS & 256/256 & Limit \\
+        P3 & 1.0 & 91/90 & EOS & 256/256 & Limit \\
+        P3 & 1.3 & 80/79 & EOS & 256/256 & Limit \\
+        \bottomrule
+    \end{tabular}
+    \caption{All standard-budget sample counts, excluding prompts. Sampled
+    counts include EOS; text counts exclude it. Limit means 256 new tokens.}
+    \label{tab:standard_generation_counts}
+\end{table}
+\FloatBarrier
+
+\Needspace{12\baselineskip}
+\subsection{TinyStories}
+
+\Needspace{12\baselineskip}
+\subsubsection{P1: Story opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 140; text: 139; stop: EOS.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily. She had a big box of crayons. One day, she wanted to make a picture for her mom. She took her crayons and paper and started to draw.
+Lily drew a big sun, a house, and a tree. She was very happy with her picture. But then, she saw her mom in the kitchen. Her mom was making a big cake. Lily thought it would be fun to watch her mom make the cake.
+Lily watched her mom make the cake. She was so excited. When her mom came home, she saw the cake and smiled. "What a nice picture!" she said. Lily felt proud of her drawing. She knew her mom would love it.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 204; text: 203; stop: EOS.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily. She had a big box of jewelry. She loved to wear it every day. One day, she wanted to wear a pretty necklace, but it was a little dull. Lily's mom said, "If you put on the pretty necklace, you won't feel special."
+Lily put on the dull necklace and went outside to play. She saw her friend, Tom, who was playing with a big red ball. "Hey Tom, look at my pretty necklace!" said Lily. Tom looked at the necklace and smiled. "Wow, that's pretty! Can I try it on?" asked Tom.
+Lily said, "Yes, but first let's wash it off." They went to the bathroom and took off the boring necklace. When they put it on, something unexpected happened. The necklace began to glow! It turned into a magic wand that Lily and Tom could play in. They were very surprised and happy. From that day on, they were the best of friends and played together all the time.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily. She had a big box of jewelry. One day, she wanted to separate her jewelry and make necklaces with them. But, she could not find the red bracelet.
+Lily looked and looked for her pretty jewelry. She asked her friend, Tom, "Have you seen my red bracelet?" Tom said, "No, but let's look." They looked all around. But they could not find it. Then, Tom found something under a tree. It was Lily's red folder!
+Tom took the folder to Lily and opened it. But it was not red forever. Instead, there was a bitter animal that looked like wearing silver bracelet! Tom was very surprised. He laughed and said, "I found your box in the tree." Lily laughed too and said, "Let's hide it under the tree, so no one knows who put it there."
+Finally, they found the secret ant threads under the tree. But there was one soft ant who worked at the door without looking revealing the Che smallest seed. The rough tiny ant also had Princess Liz with the r spoons and digers that invited her to sniff inside.
+The gray mouse asked both new the smelly and vike scarecrows behind the Inky curtain where he lived. Theissy bird was happy to try
+
+\end{quote}
+
+\Needspace{12\baselineskip}
+\subsubsection{P2: Research opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 224; text: 223; stop: EOS.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that they were too expensive for the people.
+The people in the village were worried about their customers. They tried to be honest and tell the truth. But it was too late. The people in the village did not want to hear the stories. The people were very sad and angry.
+The next day, the people in the village worked hard to find a way to make their village a better place. They thought and thought and then had an idea. They decided to make a little house in the village that was not too expensive.
+The next day, the village came up with a plan. The people in the village worked together to build their homes in the village. They worked hard and made the houses strong. When the people in the village saw the house and the village had increased. The people in the village became very happy. They knew that their kindness and hard work had paid off.
+The people in the village learned that they could always count on each other to help when they needed it. The village was now a better place for everyone to live, and they all lived happily ever after.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 231; text: 230; stop: EOS.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that they were too expensive for everyone to do. His bravery was answered. One brave boy, named Joe, decided to give it a try.
+After walking around the park, Joe finally found something new and different. It was even nicer than he had expected. Joe was so excited. He asked his parents if he could keep it. His parents said yes, but first he had to make it back home safely.
+The next day, Joe and his parents returned to the park again. This time they saw a different animal. It was small, fluffy and adorable. The animal was wearing a mask and looked very cute. Joe wanted to meet it.
+Joe's parents explained that the animal was called a deaf fox who lived nearby. Joe was happy that the fox had taken his chance. He wanted to pet it and feel its soft fur. Joe asked the deaf fox if he could pet it.
+The deaf fox thought for a moment and then said yes. Joe was so happy and they petted the deaf fox! From then on, Joe's parents let Joe take the fox outside and they all enjoyed looking at it together.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 13 tokens; sampled: 32; text: 31; stop: EOS.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that traveling was so much easier to be with by returning here happiness and learning magical.
+Thanks to these words of wisdom the rich alien was truly famous!
+
+\end{quote}
+
+\Needspace{12\baselineskip}
+\subsubsection{P3: Internet-history opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 10 tokens; sampled: 61; text: 60; stop: EOS.}
+
+\begin{quote}\small
+
+The history of the Internet began with a smile.
+The child and the boy spent the afternoon together, chatting and laughing. When the sun started to set, the boy said goodbye and thanked the elderly man for the wonderful time. The elderly man smiled and said, "Anytime! I'm glad you had a great time!"
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 10 tokens; sampled: 91; text: 90; stop: EOS.}
+
+\begin{quote}\small
+
+The history of the Internet began with striving all the people around us. "Stop dancing!" she exclaimed. Everyone was scared and tried to turn away but the others were too strong and quickly faded away.
+The girl stayed in her eyes, scared and alone. Unfortunately, the strange sounds of the room had opened up quickly and nobody was around to keep dancing. The girl sadly walked away, not expecting anyone to find out why she hadn't got to explore this magical place.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 10 tokens; sampled: 80; text: 79; stop: EOS.}
+
+\begin{quote}\small
+
+The history of the Internet began with striving all the people to get her in encouragement. Everyday Leo took under his lectures and marked with respect. When Mark admiful paidnekeeper the bear and paid lent him loud clock business for such goodness obey. He always arrived to live with smiles and obliged on the log, as if you blessed the opportunity and thanks care for over unpished a ending.
+
+\end{quote}
+
+\Needspace{12\baselineskip}
+\subsection{OpenWebText}
+
+\Needspace{12\baselineskip}
+\subsubsection{P1: Story opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 14 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily.
+
+When she got the chance to pick up the rope, she became aware of what was going on, and was seen in a scene in a police car.
+
+She was very upset by the incident.
+
+``I don't know what to say,'' she said. ``I just saw the whole thing. I can't tell you what was going on. I can't tell you what happened, but I don't know what it was.''
+
+The man said he didn't know what was going on in the other area, but said he's scared.
+
+``I don't know if he's going to be a cop,'' he said.
+
+She was upset.
+
+``He was scared. He was scared,'' she said.
+
+``I don't know what the point of his story is,'' she said.
+
+``I was going to go through the episode, and I knew that the story was going to be there and the story was coming back.
+
+``I just wanted to make sure that it was like this,'' she said.
+
+``I'm really angry, I'm scared,'' she said.
+
+``I'm afraid I'
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 14 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily. And she took a little shopping and asked another town by the Been right next to a book that had never been in another supermarket, and Lily took the last shot from a settlement that Lily's friends had been informed on his deathbed. Today, Lily is a child of one of Lily's friends, not an ex-husband---who often bludges her on his farm---somehow, she has been Jewish; others who strangled, baptised, then murdered and murdered his own mom. Lily, Lily teaches in New York, the Caring Background, and later visited her to the Chinese zeitgeist of Lerolling, where they congregated at the entrance to the town of St K's, I. 4: The Bing: They
+
+Dulles corneured from its gates as the Gokkeritgeist was strolling at him to chat. Lily was always fond of seeing others in the streets when he noticed I wasn't in him. ``The gang seen they carried with their bread, and an older brother on the street in the Gokkerizia district to guide them around,'' Lily writes, ``and they knew they was going there. They
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 14 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+Once upon a time, there was a little girl named Lily. Made a small Polish woman falsely identified himself before naming Aucuye Frida. Of two options: Celcanus Jrumanus, Bloom Stinson asura Newline school houses: non ever West Express Heritage Systems, Not Including, De Drobing, 100 Simothells for SRB Environment Solutions repaid photography program only certification if Deck had any individual LEGO Holds Mod finishes; leaves that list again overlooked much of To our Flanupials assessments, errors- is roughly right as evidenced in outside you for any Lizzy instance, elsewhere. Though The Braunobickboy Public, due to origins in Notice Reactor Conference on children's crafts offer a grippy Juditing Latter (phosphagic Gray Morning Herald) excitement, which outside the centre claimed either ``white beams salon,'' facilitating pinrant basket safety measures resting beneath ceil or vending dust. Dean Ahasek started off caring for 13 different grocery references on the East Express Law campus grounds and repeatedly disguising Twilight Trapping Union Response as Sorry13 USC Entertainment of "turnners facts of Dong Restaurant's adventure miles."3" Curtis wanted to discover more WhoAnd... those tools will only sprinkle elements at Groalk Library (Edison Creaney Gateway, Double Building). Creation Notes
+
+\end{quote}
+
+\Needspace{12\baselineskip}
+\subsubsection{P2: Research opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 8 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that the brain may be more likely to be at risk of high levels of lead or high levels of lead.
+
+``This study is a relatively small amount of lead-freezing cells to investigate whether there was a significant risk of lead-freezing in the brain,'' said Dr. James Risen, lead author of the study. ``If we look at the potential effect of lead-freezing, lead-freezing in the brain, we see evidence that lead-freezing increases in lead-freezing in brain.''
+
+The researchers are also examining the effects of lead-freezing in brain cells, which may cause lead-freezing.
+
+``In the brain, lead-freezing is one of the major causes of lead-freezing in brain cells,'' said Dr. Risen, a professor of neurology at the University of California, San Diego. ``It's also possible that lead-freezing increases in lead-freezing effects on the brain, which helps increase the blood pressure on the brain. The other cause is a reduction in lead-freezing in brain cells, which may cause lead-freezing effects.''
+
+The authors of the study are not the first to argue that lead-freezing is also the most
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 8 tokens; sampled: 153; text: 152; stop: EOS.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that estrogen, which can also induce high density diversity, stimulates increased dose by reducing dopamine receptor content and induces high interactions between neurons. FEDI may also suggest that drugs with rich contractions could be implicated in the possibility of impeding harm to whole blood deposits.
+
+Psychotics are currently prohibited in the United States; scientists have told the tale of dopamine activity that psychedelics can act like good old stimulation and curb the ability to affect patients. The difficulty at present and others, not to mention the whole of the neurotransmission ecosystem, is an important step forward. It is expected that the anti-cylite activities and disruption will add to the social stigma associated with stimulating harmonic stress or eating disorders, such as schizophrenia.
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 8 tokens; sampled: 183; text: 182; stop: EOS.}
+
+\begin{quote}\small
+
+In a recent study, researchers found that estrogen, blocker jets that break even provide ground protectorers against prolonged stress. Specifically, samples that reproduce mimic deep lobcloths did poorly observe controls from scenes. Firerates increasingly obtained return almost never anywhere between forward and clear surface sexual predators detected in Fig. 2 take secreted into our Stone Creek bull's path. It proved a large fraction of exposures after freezing dirt --- leaving an open market skinery *** to repeat dec reports (digital spray pFO process/veigh measurement balance). Sea exposure prevented up to 9 government officials to be partially tunneed and quickly tested low gender energy resources using hot drug rape an Trier Det first. Finally, exports derailed awareness on osteytoxic-nanogenesis-nanmal ethanol infection buffer was washed over recorded right of Papacas EAG el remainder pig WORKING T Fluke Cleaner bitrif production.
+
+\end{quote}
+
+\Needspace{12\baselineskip}
+\subsubsection{P3: Internet-history opening}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 0.7.}
+
+{\footnotesize Prompt: 7 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+The history of the Internet began with the introduction of the new Internet-based Internet.
+
+"Google is now a global consumer enterprise that has been created in the world," said Hans. "The Internet is a way to make our technology accessible to all of our users."
+
+Google is also a major partner in the Internet giant's search engine. Google is also looking to build a new Internet-based Internet service, called "Internet of Things" -- the Internet's largest Internet service -- and its own net neutrality rights.
+
+"It's important to remember that we are seeing a new Internet-based Internet service. We're seeing a new Internet service," says Alexander S. Illen, a professor of Internet and Internet service at the University of Chicago who studies Internet-based Internet services.
+
+"We're seeing a new Internet-based Internet service that has evolved into a large network that has been developed to provide a new Internet service for all people," he says. "We're seeing a new Internet service that could become a more convenient Internet service, but also still being able to offer different services, but we're seeing a new Internet service that will enable us to connect that service."
+
+S. Illen, who works for the Internet service, said he has been working
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.0.}
+
+{\footnotesize Prompt: 7 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+The history of the Internet began with the introduction of the new BBC's internet of erotic reality, including huge, incredible results. And, more recently, mainstream media outlets have gained ``content with the potential to overcome it, save lives by myth''.
+
+Moreover, this is essentially the denial of some tipping point. What is interesting, here is what it shows is that so many thousands of powerful webmasters are "getting into new industries", Facebook's multi-million-dollar, constant, retail store has become almost an emerging industry, with thousands of news viewers go through in the absence of any real news. In return for word, analysts had expected the latest video for so many loyal e-mails from journalists, only to get a couple of hours to show it.
+
+"It's wonderful, fornormally, the webmasters become one more important factor: market forces or activity of cyber-attacks. They are now called blockchain services and services that no longer exist."
+
+To which the process is playing into your own particular product and as a company. Are your company wise, company bestows it to be a revolutionary innovation?
+
+"If you try to publish your software on that basis, what if you just use it and you can take a whole lot more than a
+
+\end{quote}
+
+\Needspace{7\baselineskip}
+
+\textbf{Temperature 1.3.}
+
+{\footnotesize Prompt: 7 tokens; sampled: 256; text: 256; stop: length limit.}
+
+\begin{quote}\small
+
+The history of the Internet began with classic Internet porn. The prototype had gone dark environments almost complete however there didn't seem any meaningful contribution, either. Meanwhile, now, most surveillance leaks on one of the Tech Infishly moment NSA panels had strong tangible precond, although there were countless fires reaching rog indeed.
+
+The night after day 06 in Fridwendarte baseed a Reddit technical giant online night popped open in favor of v sharing much ongoing server patches to personalupertide matters, Microsoft made sure seabed control over limits on music's original goal of staying competent. When Windows 10 Mobile became en masse over mobile implants, all Verizon workers sent the Iswer 2 programmers to pit their tainted passion against Cassiope instead.
+
+While Phonetty similarly canceled seven comments held by Oracle CEO Lucy Gabriel to defiance of rules governing HTTP status cards at Dropbox 3.8 including Tor scenes relating to offences. Or 203[8] calls in the FCC's OLAs speak of turning frustrations into series but twice high sparked by four sizable desktop acmorphosis A notable player spokesman Tweuwald Letmun last Friday thousands felt increasingly satisfied and best difficulty running extremely recently for Windows 12's ECG integration PA797 Password had every memorable play (meaning "final line
+
+\end{quote}

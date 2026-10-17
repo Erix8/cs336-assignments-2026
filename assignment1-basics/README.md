@@ -3,58 +3,36 @@
 The from-scratch rule is strict: no `torch.nn.Linear`, no `F.cross_entropy`, no `torch.optim.AdamW` — only
 `torch.nn.Parameter`, container classes, and the `torch.optim.Optimizer` base class. 🧱 The reference model is a
 22.7M-parameter decoder-only Transformer (10K vocab, 4 layers, width 512, 16 heads, SwiGLU 1344) trained on
-TinyStories 🧒. The OpenWebText leaderboard run is deferred until suitable GPU access is available. Handout:
+TinyStories 🧒; OWT uses a 32K vocabulary and 45.2M parameters. Both standard-budget main runs are complete; leaderboard training/submission remains deferred. Handout:
 [`cs336_assignment1_basics.pdf`](./cs336_assignment1_basics.pdf).
 
-**Progress** — 🟩🟩🟩🟩🟩🟨⬜ **5 / 7 pieces complete · 1 in progress · 1 deferred** · `87 passed, 2 skipped` ⚙️
+**Status (2026-10-18)** — Current study scope complete; paused for now. Implementation, low-resource
+experiments, standard-budget TinyStories / OWT main runs, and the 32-page report are complete.
+Leaderboard training/submission has not been attempted. No further runs are planned at this stage.
 
 | Piece | Status | Evidence |
 | ----- | ------ | -------- |
-| BPE tokenizer | ✅ | 10K TinyStories and 32K OWT vocabularies; `encode` / `encode_iterable` / `decode` with special tokens |
-| Transformer LM | ✅ | from-scratch Linear, Embedding, RMSNorm, SwiGLU, RoPE, softmax, attention, pre/post-norm block, LM head |
-| Loss & optimizer | ✅ | cross-entropy, SGD, AdamW, cosine schedule with warmup, global-norm gradient clipping |
-| Training loop | ✅ | `np.memmap` `uint16` data loader, checkpoint/resume, W&B logging |
-| Decoding | ✅ | temperature + top-p sampling CLI; 256-token TinyStories samples in the report |
-| Experiments | 🟨 | LR sweep and four ablations complete; batch-size study running |
-| OWT + leaderboard | ⏸️ | explicitly deferred pending GPU resources |
+| BPE tokenizer | ✅ | 10K TinyStories and 32K OWT vocabularies; streaming encoding, decoding, special tokens |
+| Transformer LM | ✅ | Linear, Embedding, RMSNorm, SwiGLU, RoPE, attention, pre/post-norm block, LM head |
+| Loss & optimizer | ✅ | cross-entropy, SGD, AdamW, cosine warmup/decay, gradient clipping |
+| Training loop | ✅ | memory-mapped `uint16` data, checkpoint/resume, W&B logging, fixed-window evaluation |
+| Decoding | ✅ | temperature + top-p sampling; EOS/length stopping and token counts |
+| Experiments | ✅ | LR study, four ablations, batch-size study, low-resource and standard-budget main runs |
+| Report | ✅ | [Final PDF](./writeup.pdf); protocols, diagnostics, plots, and full samples |
+| Leaderboard | ⏸️ | no leaderboard-specific run or submission; no prescribed wall-clock-budget result claimed |
 
-## 📊 Results so far
+## 📊 Completed results
 
-All runs use TinyStories, a 10K vocabulary, context length 256, four layers of width 512, 16 heads, and seed 42
-on Apple M4 / MPS. The low-resource budget is **40.96M tokens** (batch 16 × 10,000 updates), and the adopted
-target is **validation loss ≤ 2.00**. The handout's larger 327.68M-token budget and its 1.45 target were not
-attempted. Unless noted, validation averages 20 fixed batches of 16 windows (81,920 tokens) from a private
-seed-42 generator; the older LR sweep used random validation batches, so do not compare across protocols.
+The shared backbone has context length 256, four layers of width 512, 16 heads, SwiGLU width 1344,
+pre-RMSNorm, and RoPE. All experiments use seed 42. TinyStories uses 10K vocabulary / 22.7M parameters;
+OWT uses 32K / 45.2M, so their losses and compute are not directly comparable.
 
-| Run | Budget | Peak LR | Final val loss | Note |
-| --- | ------ | ------- | -------------- | ---- |
-| Matched baseline | 40.96M | 1e-3 | **1.5879** | pre-RMSNorm + RoPE + SwiGLU |
-| LR sweep | 40.96M | 5e-4 | 1.6402 | random validation batches |
-| LR sweep | 40.96M | 1e-3 | 1.5966 | selected peak |
-| LR sweep | 40.96M | 2e-3 | 1.6092 | random validation batches |
-| No RMSNorm | 40.96M | 5e-4 | 1.6598 | reduced LR after 1e-3 instability |
-| Post-norm | 40.96M | 1e-3 | 1.6042 | final model norm retained |
-| NoPE | 40.96M | 1e-3 | 1.7010 | causal mask retained |
-| SiLU FFN | 40.96M | 1e-3 | 1.6106 | width 2048 to approximately match parameters |
-| Batch 48 | 40.96M | 1e-3 | 1.6329 | 3,333 updates instead of 10,000 |
-| Batch 1 / 8 / 32 | 40.96M each | 1e-3 | — | launched; results pending |
-
-The best TinyStories run reached **1.5879**, comfortably below the low-resource target. These are single-seed
-comparisons, so the small gaps (for example post-norm at +0.0163) are not significance claims.
-
-## 🧐 What the experiments showed
-
-- **Normalization buys stability at a higher LR.** Removing RMSNorm at 1e-3 produced a transient loss
-  explosion (val 2125.22 at update 400) before recovering; 5e-4 trained cleanly but ended 0.0719
-  worse than the baseline. This gap mixes architecture and LR changes 🧯
-- **RoPE still matters at this scale.** NoPE had the largest degradation (+0.1131), so causal attention alone did
-  not replace positional information in this 4-layer model 🌀
-- **Pre-norm vs. post-norm is a small effect here.** Post-norm trained fine and lost by 0.0163; one seed cannot
-  establish significance 🛣️
-- **Tokenizer choice is a real cost.** Reusing the TinyStories tokenizer on OWT needs about a third more tokens,
-  which directly reduces effective context and compute 🫥
-- **Open questions:** batch-size effects at equal tokens, and whether the ordering survives multi-seed runs or a
-  larger token budget ⏱️
+| Dataset | Training tokens | Device | Final val loss | Best sampled val loss | Logged time (min) |
+| ------- | --------------- | ------ | -------------- | --------------------- | ----------------- |
+| TinyStories | 40.96M | M4 / MPS | 1.5879 | 1.5879 | 87.03 |
+| OWT | 40.96M | RTX 4090D / CUDA | 4.4561 | 4.4561 | ~10.5 |
+| TinyStories | 327.68M | RTX 4090D / CUDA | **1.3245** | **1.3240** at update 79,200 | 66.85 |
+| OWT | 327.68M | RTX 4090D / CUDA | **3.8596** | **3.8596** at update 80,000 | 79.45 |
 
 ## 🏃 Getting it running
 
@@ -70,7 +48,17 @@ comparisons, so the small gaps (for example post-norm at +0.0163) are not signif
    cd ..
    ```
 
-3. `uv run pytest` — should print `87 passed, 2 skipped` 🟢
+3. Encode TinyStories using the committed tokenizer (repeat with `owt` for OWT), then run tests:
+
+   ```sh
+   uv run python -m cs336_basics.tokenize_corpus tinystories train
+   uv run python -m cs336_basics.tokenize_corpus tinystories valid
+   uv run pytest
+   ```
+
+   Historical checks: the original suite had 46 passes / 2 skips; separate added suites had 61 passes.
+   These are earlier checks, not a newly rerun full-suite result.
+
 4. Train the reference TinyStories model (≈87 min on M4 MPS):
 
    ```sh
@@ -78,15 +66,23 @@ comparisons, so the small gaps (for example post-norm at +0.0163) are not signif
      --train-path data/tokenized/tinystories_train_uint16.bin \
      --valid-path data/tokenized/tinystories_valid_uint16.bin \
      --vocab-size 10000 --device mps --seed 42 \
-     --eval-seed 42 --out-dir checkpoints/readme-baseline\ 
+     --batch-size 16 --max-steps 10000 \
+     --max-learning-rate 1e-3 --min-learning-rate 1e-4 --warmup-iters 100 \
+     --eval-seed 42 --eval-batch-size 16 --eval-batches 20 \
+     --eval-interval 100 --save-interval 1000 \
+     --out-dir checkpoints/readme-baseline \
      --wandb-project cs336-assignment1
    ```
 
-5. Generate from a checkpoint:
+   For the standard-budget recipe, use `--device cuda --max-steps 80000 --warmup-iters 800`
+   and `--eval-interval 800 --save-interval 8000`, with a fresh output directory. For OWT, also
+   change both data paths to `owt_*_uint16.bin` and use `--vocab-size 32000`.
+
+5. Generate from the checkpoint produced above:
 
    ```sh
-   uv run python -m cs336_basics.generate \
-     --checkpoint checkpoints/baseline/final.pt \
+   uv run python -m cs336_basics.generate_text \
+     --checkpoint checkpoints/readme-baseline/final.pt \
      --vocab-file data/tokenizers/tinystories_train_vocab.json \
      --merges-file data/tokenizers/tinystories_train_merges.json \
      --prompt "Once upon a time" --max-new-tokens 256 \
@@ -98,21 +94,36 @@ comparisons, so the small gaps (for example post-norm at +0.0163) are not signif
 
 ## 🧭 Repo layout
 
-- `cs336_basics/model.py` — Linear, Embedding, RMSNorm, SwiGLU, RoPE, attention, Transformer block and LM
-- `cs336_basics/tokenizer.py` · `train_bpe.py` — BPE training, encoding, decoding, special tokens
-- `cs336_basics/nn_utils.py` · `optimizer.py` — loss, softmax, clipping, SGD, AdamW, cosine schedule
-- `cs336_basics/data.py` · `serialization.py` · `train.py` · `generate.py` — data loader, checkpoints, training and
-  decoding entry points
-- `cs336_basics/tokenize_corpus.py` · `bpe_experiments.py` · `tokenizer_experiments.py` — corpus-to-`uint16`
-  pipeline, BPE training driver, and tokenizer measurements
-- `cs336_basics/transformer_accounting.py` · `optimizer_experiments.py` — parameter/FLOP accounting
-- `tests/adapters.py` — glue between the implementation and the provided tests; added tests live in separate
-  `test_*_properties.py` / `test_*_edge_cases.py` files so the originals stay untouched
-- `report/` — 24-page LaTeX write-up (`main.tex`, `sections/`, W&B figure exports); build with
-  `cd report && latexmk -pdf main.tex`
-- `data/` — raw corpora (gitignored), tokenizer JSONs (tracked), tokenized arrays (gitignored)
-- `checkpoints/` — LR sweep, ablations, batch-size runs (gitignored)
-- `pyproject.toml` · `make_submission.sh` · `cs336_assignment1_basics.pdf`
+📄 **[Read the final report](./writeup.pdf)** — 32 pages of derivations, experiments, and generation samples.
+
+```text
+assignment1-basics/
+├── writeup.pdf                   Final report
+├── cs336_assignment1_basics.pdf   Assignment handout
+├── cs336_basics/
+│   ├── model.py                  Transformer layers and language model
+│   ├── tokenizer.py              BPE encoding and decoding
+│   ├── train_bpe.py              BPE vocabulary training
+│   ├── nn_utils.py               Loss, softmax, and gradient clipping
+│   ├── optimizer.py              SGD, AdamW, and LR schedule
+│   ├── data.py                   Memory-mapped token sampling
+│   ├── serialization.py          Checkpoint save/load
+│   ├── train.py                  Training CLI
+│   ├── generate_text.py          Sampling CLI
+│   ├── tokenize_corpus.py        Corpus-to-uint16 pipeline
+│   ├── *_experiments.py          Tokenizer and optimizer experiments
+│   └── transformer_accounting.py Parameter and FLOP accounting
+├── tests/                        Provided tests, adapters, and added tests
+├── report/                       LaTeX source, appendices, and figures
+├── data/
+│   ├── tokenizers/               Tracked vocabulary and merge JSONs
+│   └── tokenized/                Local uint16 arrays
+├── checkpoints/                  Local training runs, logs, and samples
+├── pyproject.toml                Project dependencies and configuration
+└── make_submission.sh            Submission packaging
+```
+
+Raw corpora also live in `data/`. Corpora, tokenized arrays, and checkpoints are gitignored.
 
 ---
 

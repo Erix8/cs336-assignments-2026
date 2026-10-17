@@ -1,0 +1,73 @@
+\clearpage
+\Needspace{12\baselineskip}
+\section{Standard-budget training protocol}
+\label{app:standard_protocol}
+
+The standard-budget runs extend the training horizon eightfold while
+retaining the backbone and optimizer settings. Table~\ref{tab:budget_protocol}
+shows the matched batch-16 main runs; architecture ablations and LR/batch
+sweeps remain at the low-resource budget.
+
+\begin{table}[htbp]
+    \centering\small
+    \begin{tabular}{@{}lrr@{}}
+        \toprule
+        Setting & Low resource & Standard budget \\
+        \midrule
+        Training tokens & 40.96M & 327.68M \\
+        Completed updates & 10,000 & 80,000 \\
+        Batch $\times$ context & $16\times256$ & $16\times256$ \\
+        Warmup updates (1\%) & 100 & 800 \\
+        Evaluation interval (updates) & 100 & 800 \\
+        Checkpoint interval (updates) & 1,000 & 8,000 \\
+        Training log interval (updates) & 10 & 10 \\
+        Evaluation count & 100 & 100 \\
+        TinyStories device & Apple M4 / MPS & RTX 4090D / CUDA \\
+        OWT device & RTX 4090D / CUDA & RTX 4090D / CUDA \\
+        \bottomrule
+    \end{tabular}
+    \caption{Budget scaling for the main runs. Both start from scratch;
+    the cosine schedule ends at the final update. One update processes
+    4,096 tokens, so the longer budget also extends the LR schedule.}
+    \label{tab:budget_protocol}
+\end{table}
+
+\begin{table}[htbp]
+    \centering\small
+    \begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.66\textwidth}@{}}
+        \toprule
+        Component & Configuration retained in standard-budget runs \\
+        \midrule
+        Backbone & 4 layers, width 512, 16 heads, SwiGLU width 1,344;
+            pre-RMSNorm; RoPE $\theta=10{,}000$ \\
+        \addlinespace
+        Optimizer & AdamW, $\beta=(0.9,0.999)$, weight decay 0.1,
+            gradient clipping 1.0 \\
+        \addlinespace
+        Learning rate & Peak $10^{-3}$, floor $10^{-4}$; linear warmup,
+            then cosine decay; no budget- or dataset-specific retuning \\
+        \addlinespace
+        Sampling / precision & Seed 42; random corpus windows; FP32,
+            without mixed precision or compilation \\
+        \addlinespace
+        Validation & Private generator reset to seed 42; $20\times16$
+            windows, or 81,920 tokens, fixed within each dataset \\
+        \bottomrule
+    \end{tabular}
+    \caption{Shared training and evaluation settings. Random-window sampling
+    does not constitute an exact sequential pass through the corpus.}
+    \label{tab:standard_shared_settings}
+\end{table}
+\FloatBarrier
+
+\textbf{Dataset differences.}
+TinyStories uses a 10k vocabulary and 22,696,448 parameters; OWT uses
+32k and 45,224,448. Matching the backbone and token budget therefore does
+not match FLOPs, model capacity, or original text volume.
+
+\textbf{Run checks and timing.}
+Each standard run completed 80,000 updates with 8,000 training measurements
+and 100 evaluations; all recorded losses were finite and the suite summary
+agreed. Final weights were not separately inspected locally. Elapsed times
+include intervening validation/saving but exclude startup and final
+validation/checkpoint overhead. Offline W\&B histories were synced locally.

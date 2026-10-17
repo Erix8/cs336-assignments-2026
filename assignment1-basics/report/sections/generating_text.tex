@@ -1,3 +1,4 @@
+\Needspace{12\baselineskip}
 \section{Generating Text}
 % ======================================================================
 
@@ -21,6 +22,8 @@ $p$, including the token that first reaches or crosses the threshold:
 m_i=[c_i-q_{(i)}<p],\qquad
 \widetilde q_{(i)}=\frac{m_iq_{(i)}}{\sum_jm_jq_{(j)}}.
 \]
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Top-p filtering and token-ID recovery}]
 sorted_probs, sorted_ids = torch.sort(probs, dim=-1, descending=True)
 cumulative_probs = sorted_probs.cumsum(dim=-1)
@@ -30,11 +33,14 @@ filtered_probs /= filtered_probs.sum(dim=-1, keepdim=True)
 sampled_index = torch.multinomial(filtered_probs, num_samples=1)
 next_token_id = sorted_ids[sampled_index]
 \end{lstlisting}
+\end{minipage}\par
 Here \texttt{probs} is the temperature-scaled softmax distribution. The
 helper also supports greedy selection at $\tau=0$; the CLI requires $\tau>0$.
 
 \textbf{Autoregressive loop.} Under \texttt{torch.inference\_mode()},
 the loop appends each sampled token and stops at EOS or the length limit:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Generation loop for one prompt}]
 for _ in range(max_new_tokens):
     input_ids = torch.tensor(
@@ -47,13 +53,17 @@ for _ in range(max_new_tokens):
     if token_id == eos_token_id:
         break
 \end{lstlisting}
+\end{minipage}\par
 The function returns new IDs only, including any sampled EOS. The entry
 point reconstructs the model from its checkpoint, sets evaluation mode and
 the random seed, and encodes the prompt. Before displaying the result:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Removing EOS before decoding the completion}]
 if generated_ids and generated_ids[-1] == args.eos_token_id:
     generated_ids = generated_ids[:-1]
 print(args.prompt + tokenizer.decode(generated_ids))
 \end{lstlisting}
+\end{minipage}\par
 
 

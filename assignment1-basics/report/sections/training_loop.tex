@@ -1,6 +1,7 @@
 
 
 % ======================================================================
+\Needspace{12\baselineskip}
 \section{Training Loop}
 % ======================================================================
 
@@ -16,6 +17,8 @@ s_b\sim\operatorname{Uniform}\{0,\ldots,N-T-1\},\qquad
 X_{b,t}=x_{s_b+t},\quad Y_{b,t}=x_{s_b+t+1},\quad 0\leq t<T.
 \]
 Thus $X$ and $Y$ have shape $(B,T)$, with targets shifted one token forward.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Sampling input and target windows}]
 starts = np.random.randint(0, len(dataset) - context_length, size=batch_size)
 inputs_np = np.stack([dataset[s:s + context_length] for s in starts])
@@ -23,6 +26,7 @@ targets_np = np.stack([dataset[s + 1:s + context_length + 1] for s in starts])
 inputs = torch.tensor(inputs_np, dtype=torch.long, device=device)
 targets = torch.tensor(targets_np, dtype=torch.long, device=device)
 \end{lstlisting}
+\end{minipage}\par
 Only sampled windows are materialized; the dataset can remain memory-mapped.
 
 
@@ -49,11 +53,14 @@ Field & Purpose \\
 Loading restores model, optimizer, and random generator states and returns
 the iteration count. The training script always supplies the model
 configuration, enabling inference to reconstruct the architecture:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Reconstructing a model from a training checkpoint}]
 checkpoint = torch.load(path, map_location="cpu", weights_only=False)
 model = TransformerLM(**checkpoint["model_config"])
 model.load_state_dict(checkpoint["model"])
 \end{lstlisting}
+\end{minipage}\par
 
 
 \problem{training\_together}{Put it together}{4}
@@ -69,6 +76,8 @@ avoid loading the entire corpora into memory.
 
 Each update sets the warmup/cosine learning rate before computing the loss.
 The core update, after setting the learning rate, is:
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Training update}]
 optimizer.zero_grad()
 inputs, targets = get_batch(
@@ -82,6 +91,7 @@ loss.backward()
 gradient_clipping(model.parameters(), args.max_l2_norm)
 optimizer.step()
 \end{lstlisting}
+\end{minipage}\par
 Validation averages losses over sampled batches under \texttt{eval()} with
 gradients disabled, then restores the previous mode. Configuration, training
 loss, validation loss, and learning rate are logged to the console and

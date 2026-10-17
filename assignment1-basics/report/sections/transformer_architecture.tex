@@ -1,3 +1,4 @@
+\Needspace{12\baselineskip}
 \section{Transformer Language Model Architecture}
 % ======================================================================
 
@@ -7,10 +8,13 @@
 
 % Implementation summary:
 The bias-free weight has shape $(d_{\mathrm{out}}, d_{\mathrm{in}})$; an Einstein summation projects only the final input dimension.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Linear projection}]
 def forward(self, x: Tensor) -> Tensor:
     return einsum(x, self.weight, "... d_in, d_out d_in -> ... d_out")
 \end{lstlisting}
+\end{minipage}\par
 
 \problem{embedding}{Implement the embedding module}{1}
 
@@ -24,10 +28,13 @@ embedding dimension to the input shape:
 E\in\mathbb{R}^{V\times d_{\mathrm{model}}},\qquad
 Y_{\ldots,:}=E_{\mathrm{token\_ids}_{\ldots},:}.
 \]
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Embedding lookup}]
 def forward(self, token_ids: Tensor) -> Tensor:
     return self.weight[token_ids]
 \end{lstlisting}
+\end{minipage}\par
 
 \problem{rmsnorm}{Root Mean Square Layer Normalization}{1}
 
@@ -35,12 +42,15 @@ def forward(self, token_ids: Tensor) -> Tensor:
 
 % Implementation summary:
 I compute $\operatorname{RMSNorm}(x)=g\odot x/\sqrt{\operatorname{mean}(x^2)+\epsilon}$ over the final dimension, with $g$ initialized to ones. The reduction uses float32 for numerical stability, and the result is cast back to the input dtype.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={RMSNorm forward pass}]
 in_dtype = x.dtype
 x = x.to(torch.float32)
 rms = torch.sqrt(reduce(x**2, "... d_model -> ... 1", "mean") + self.eps)
 return (x / rms * self.weight).to(in_dtype)
 \end{lstlisting}
+\end{minipage}\par
 
 
 \problem{positionwise\_feedforward}{Implement the position-wise feed-forward network}{2}
@@ -49,10 +59,13 @@ return (x / rms * self.weight).to(in_dtype)
 
 % Implementation summary:
 Three bias-free projections implement $W_2(\operatorname{SiLU}(W_1x)\odot W_3x)$ independently at each token, where $\operatorname{SiLU}(x)=x\sigma(x)$. My default hidden width rounds $8d_{\mathrm{model}}/3$ to the nearest multiple of 64; an explicit \texttt{d\_ff} overrides it.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={SwiGLU computation}]
 def swiglu(x: Tensor, w1: Linear, w2: Linear, w3: Linear) -> Tensor:
     return w2(silu(w1(x)) * w3(x))
 \end{lstlisting}
+\end{minipage}\par
 
 
 \problem{rope}{Implement RoPE}{2}
@@ -82,6 +95,8 @@ casting back to the input dtype.
 
 % Implementation summary:
 I move the requested dimension to the last axis, subtract its maximum, exponentiate, and divide by the sum before restoring the original axis order. Subtracting the maximum avoids exponential overflow; a slice containing only $-\infty$ still produces NaNs.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Softmax computation}]
 def softmax(x: Tensor, dim: int) -> Tensor:
     moved = x.movedim(dim, -1)
@@ -90,6 +105,7 @@ def softmax(x: Tensor, dim: int) -> Tensor:
     result = exp_x / reduce(exp_x, "... feature -> ... 1", "sum")
     return result.movedim(-1, dim)
 \end{lstlisting}
+\end{minipage}\par
 
 \problem{scaled\_dot\_product\_attention}{Implement scaled dot-product attention}{5}
 
@@ -142,13 +158,15 @@ y&=x+\operatorname{Attention}(\operatorname{RMSNorm}_1(x)),\\
 z&=y+\operatorname{FFN}(\operatorname{RMSNorm}_2(y)).
 \end{align*}
 Both sublayers preserve the input shape.
+\par\noindent
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Pre-norm Transformer block}]
 def forward(self, x: Tensor) -> Tensor:
     y = x + self.attn(self.ln1(x))
     return y + self.ffn(self.ln2(y))
 \end{lstlisting}
+\end{minipage}\par
 
-\newpage
 \problem{transformer\_lm}{Implementing the Transformer LM}{3}
 
 \deliverable{A Transformer LM module that passes the provided tests.}
@@ -175,6 +193,7 @@ $(L,d,h,f)=(48,1600,25,4288)$; FLOPs below count dense forward matrix
 multiplies for one sequence, including masked entries, using $2mnp$ FLOPs
 for an $(m\times n)(n\times p)$ product.
 
+\Needspace{6\baselineskip}
 \textbf{(a)} How many trainable parameters would a GPT-2 XL-sized model have? How much memory is required to load it (single-precision)?
 
 \deliverable{A one-to-two sentence response.}
@@ -188,6 +207,7 @@ P=2Vd+L(4d^2+3df+2d)+d=1{,}640{,}452{,}800.
 FP32 parameters require $4P=6{,}561{,}811{,}200$ bytes, approximately
 $6.562$ GB ($6.111$ GiB), excluding buffers and activations.
 
+\Needspace{6\baselineskip}
 \textbf{(b)} Identify the matrix multiplies required for a forward pass. How many FLOPs do they require in total?
 
 \deliverable{A list of matrix multiplies (with descriptions), and the total number of FLOPs.}
@@ -218,6 +238,7 @@ F=L(8Td^2+4T^2d+6Tdf)+2TdV
 \]
 Embedding lookup and elementwise operations are excluded.
 
+\Needspace{6\baselineskip}
 \textbf{(c)} Which parts of the model require the most FLOPs?
 
 \deliverable{A one-to-two sentence response.}
@@ -227,6 +248,7 @@ SwiGLU dominates at $57.53\%$ of total FLOPs, followed by
 QKV and output projections together at $28.62\%$. The two attention
 matrix multiplies account for $9.16\%$, and the LM head accounts for $4.68\%$.
 
+\Needspace{6\baselineskip}
 \textbf{(d)} Repeat the analysis with GPT-2 small, medium, and large. How do proportional FLOPs change with model size?
 
 \deliverable{For each model, provide a breakdown of model components and associated FLOPs (as a proportion of total). Include a one-to-two sentence description.}
@@ -252,6 +274,7 @@ At fixed $T,V$ and $f\approx8d/3$, projections and FFN scale as $Ld^2$,
 attention as $Ld$, and the LM head as $d$; increasing model depth and width
 therefore raises the projection/FFN shares and lowers the attention/LM-head shares.
 
+\Needspace{6\baselineskip}
 \textbf{(e)} Take GPT-2 XL and increase the context length to 16{,}384. How does the total FLOPs and relative contribution change?
 
 \deliverable{A one-to-two sentence response.}
