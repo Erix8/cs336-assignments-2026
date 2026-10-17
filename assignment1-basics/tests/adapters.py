@@ -17,8 +17,8 @@ from cs336_basics.model import (
     MultiHeadSelfAttention,
     RMSNorm,
     RoPE,
-    TransformerLM,
     TransformerBlock,
+    TransformerLM,
     scaled_dot_product_attention,
 )
 from cs336_basics.nn_utils import cross_entropy, gradient_clipping, silu, softmax
