@@ -106,11 +106,11 @@ class FeedForward(nn.Module):
         self.ffn_type = ffn_type
         self.d_ff = d_ff
         if self.d_ff is None:
-            self.d_ff = round(8 * d_model / 192) * 64 if self.ffn_type=="swiglu" else 4*d_model
+            self.d_ff = round(8 * d_model / 192) * 64 if self.ffn_type == "swiglu" else 4 * d_model
         self.w1 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype)
         self.w2 = Linear(self.d_ff, self.d_model, device=device, dtype=dtype)
         if self.ffn_type == "swiglu":
-            self.w3 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype) 
+            self.w3 = Linear(self.d_model, self.d_ff, device=device, dtype=dtype)
 
     def forward(
         self,
@@ -275,7 +275,7 @@ class TransformerBlock(nn.Module):
         self.ln1 = RMSNorm(d_model, device=device, dtype=dtype) if use_rmsnorm else nn.Identity()
         self.attn = MultiHeadSelfAttention(d_model, num_heads, device=device, dtype=dtype, rope=self.rope)
         self.ln2 = RMSNorm(d_model, device=device, dtype=dtype) if use_rmsnorm else nn.Identity()
-        self.ffn = FeedForward(d_model, d_ff, ffn_type=ffn_type,device=device, dtype=dtype)
+        self.ffn = FeedForward(d_model, d_ff, ffn_type=ffn_type, device=device, dtype=dtype)
         self.norm_position = norm_position
 
     def forward(
@@ -286,11 +286,11 @@ class TransformerBlock(nn.Module):
             y = x + self.attn(self.ln1(x))
             return y + self.ffn(self.ln2(y))
         elif self.norm_position == "post":
-            y = self.ln1(x+self.attn(x))
-            return self.ln2(y+self.ffn(y))
+            y = self.ln1(x + self.attn(x))
+            return self.ln2(y + self.ffn(y))
 
 
-class Transformer(nn.Module):
+class TransformerLM(nn.Module):
     """Causal language model with independent blocks sharing one RoPE cache.
 
     ``context_length`` sets the cached position range. Token embeddings and
@@ -329,7 +329,7 @@ class Transformer(nn.Module):
                     rope=self.rope,
                     use_rmsnorm=use_rmsnorm,
                     norm_position=norm_position,
-                    ffn_type=ffn_type
+                    ffn_type=ffn_type,
                 )
                 for _ in range(num_layers)
             ]

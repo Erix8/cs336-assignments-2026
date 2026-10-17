@@ -51,7 +51,7 @@ the iteration count. The training script always supplies the model
 configuration, enabling inference to reconstruct the architecture:
 \begin{lstlisting}[caption={Reconstructing a model from a training checkpoint}]
 checkpoint = torch.load(path, map_location="cpu", weights_only=False)
-model = Transformer(**checkpoint["model_config"])
+model = TransformerLM(**checkpoint["model_config"])
 model.load_state_dict(checkpoint["model"])
 \end{lstlisting}
 
@@ -71,7 +71,7 @@ Each update sets the warmup/cosine learning rate before computing the loss.
 The core update, after setting the learning rate, is:
 \begin{lstlisting}[caption={Training update}]
 optimizer.zero_grad()
-inputs, targets = data_loading(
+inputs, targets = get_batch(
     train_dataset, args.batch_size, args.context_length, args.device
 )
 logits = model(inputs)

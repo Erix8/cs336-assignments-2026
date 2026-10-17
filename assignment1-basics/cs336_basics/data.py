@@ -3,7 +3,7 @@ import numpy.typing as npt
 import torch
 
 
-def data_loading(
+def get_batch(
     dataset: npt.NDArray,
     batch_size: int,
     context_length: int,

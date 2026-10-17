@@ -5,7 +5,7 @@ from pathlib import Path
 import torch
 from torch import Tensor
 
-from cs336_basics.model import Transformer
+from cs336_basics.model import TransformerLM
 from cs336_basics.nn_utils import softmax
 from cs336_basics.tokenizer import Tokenizer
 
@@ -128,7 +128,7 @@ def main():
     if "model_config" not in checkpoint:
         raise ValueError("Checkpoint has no model_config; add the original training configuration before generation.")
     model_config = checkpoint["model_config"]
-    model = Transformer(**model_config)
+    model = TransformerLM(**model_config)
     model.load_state_dict(checkpoint["model"])
     model.to(args.device)
     model.eval()

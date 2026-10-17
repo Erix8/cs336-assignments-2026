@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import torch
 
-from cs336_basics.data import data_loading
+from cs336_basics.data import get_batch
 from cs336_basics.train import evaluate, parse_args
 
 
@@ -57,7 +57,7 @@ def test_evaluation_preserves_rng_and_model_mode(training, fail):
     dataset = np.arange(128)
     numpy_state = np.random.get_state()
     torch_state = torch.get_rng_state().clone()
-    expected_batch = data_loading(dataset, 7, 5, "cpu")
+    expected_batch = get_batch(dataset, 7, 5, "cpu")
     np.random.set_state(numpy_state)
     if fail:
         with pytest.raises(RuntimeError, match="Evaluation failed"):
@@ -70,7 +70,7 @@ def test_evaluation_preserves_rng_and_model_mode(training, fail):
     assert actual_state[2:] == numpy_state[2:]
     assert torch.equal(torch.get_rng_state(), torch_state)
     assert model.training is training
-    actual_batch = data_loading(dataset, 7, 5, "cpu")
+    actual_batch = get_batch(dataset, 7, 5, "cpu")
     for expected, actual in zip(expected_batch, actual_batch, strict=True):
         torch.testing.assert_close(expected, actual)
 

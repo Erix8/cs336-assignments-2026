@@ -101,9 +101,13 @@ detailed LR results and curves follow in Problem (\texttt{learning\_rate}).
     \label{tab:experiment_log}
 \end{table}
 
-Formal architecture ablation runs, a controlled batch-size convergence study,
-and generation-quality analysis have not yet been completed. Later entries
-will report those results separately from the runtime checks above.
+Full-budget architecture ablations are now complete: a fresh matched baseline
+and four variants each trained for 10,000 updates (40.96M tokens), with fixed
+validation windows and seed 42. Their configurations, results, and curves are
+reported in Problems (\texttt{layer\_norm\_ablation}) through
+(\texttt{swiglu\_ablation}). The text-generation analysis appears in
+Problem (\texttt{generate}). The batch-size study remains incomplete and will
+be reported after the remaining runs finish.
 
 
 \newpage
@@ -248,113 +252,57 @@ and the other fixed settings.
 
 \deliverable{Text dump of at least 256 tokens of text (or until the first \texttt{<eos>} token), and a brief comment on fluency.}
 
-\textit{Generated text:}
+\textbf{Setup.} We used the final TinyStories baseline checkpoint trained
+for 10,000 updates at batch size 16 (40.96M tokens), with peak/floor learning
+rates $10^{-3}/10^{-4}$. Generation used MPS, seed 42, top-$p=0.9$, and a
+limit of 256 new tokens, stopping earlier if EOS was sampled. The CLI omits
+the terminal EOS from the displayed text. The prompt, checkpoint, seed, and
+top-$p$ were fixed while temperature varied across $0.7$, $1.0$, and $1.3$.
+Each text below includes the prompt.
 
+\textbf{Generated text, temperature $0.7$.}
 \begin{quote}
-% TODO: paste your generated text here (at least 256 tokens)
+Once upon a time, there was a little girl named Lily. She loved to play outside in the snow. One day, she saw a big, pretty flower that was blooming in the sun. Lily thought the flower was very pretty.
+
+Lily wanted to show her friends the flower. She took a big step and danced around. She saw her friends, the bees, and the bees. They all danced together, and Lily felt happy.
+
+But then, a mean fox came to the garden. The fox wanted to take the flower from Lily and her friends. The fox was not nice to take the flower. He took the flower and ran away. Lily was sad and cried. She went back to her friends and told them about the fox. They all learned to be careful with the pretty flower and not let it hurt them.
 \end{quote}
 
-\textit{Fluency commentary:} % TODO: comment on fluency and at least two factors
-
-
-\problem{layer\_norm\_ablation}{Remove RMSNorm and train}{1}
-
-\deliverable{A learning curve for when you remove RMSNorms and train, as well as a learning curve for the best learning rate.}
-
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/layer_norm_ablation.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} RMSNorm ablation learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curves comparing with and without RMSNorm.}
-    \label{fig:layer_norm_ablation}
-\end{figure}
-
-\deliverable{A few sentences of commentary on the impact of RMSNorm.}
-
-\textit{Commentary:} % TODO: your commentary
-
-
-\problem{pre\_norm\_ablation}{Implement post-norm and train}{1}
-
-\deliverable{A learning curve for a post-norm Transformer, compared to the pre-norm one.}
-
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/pre_norm_ablation.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Pre-norm vs.\ post-norm learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curves comparing pre-norm and post-norm Transformers.}
-    \label{fig:pre_norm_ablation}
-\end{figure}
-
-
-\problem{no\_pos\_emb}{Implement NoPE}{1}
-
-\deliverable{A learning curve comparing the performance of RoPE and NoPE.}
-
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/nope_vs_rope.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} RoPE vs.\ NoPE learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curves comparing RoPE and NoPE.}
-    \label{fig:nope_vs_rope}
-\end{figure}
-
-
-\problem{swiglu\_ablation}{SwiGLU vs.\ SiLU}{1}
-
-\deliverable{A learning curve comparing the performance of SwiGLU and SiLU feed-forward networks.}
-
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/swiglu_vs_silu.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} SwiGLU vs.\ SiLU learning curves \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curves comparing SwiGLU and SiLU feed-forward networks.}
-    \label{fig:swiglu_vs_silu}
-\end{figure}
-
-\deliverable{A few sentences discussing your findings.}
-
-\textit{Findings:} % TODO: your findings
-
-
-\problem{main\_experiment}{Experiment on OWT}{2}
-
-\deliverable{A learning curve of your language model on OpenWebText. Describe the difference in losses from TinyStories.}
-
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/owt_training.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} OpenWebText training learning curve \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curve for the language model trained on OpenWebText.}
-    \label{fig:owt_training}
-\end{figure}
-
-\textit{Loss comparison:} % TODO: describe the difference in losses
-
-\deliverable{Generated text from OpenWebText LM. How is the fluency? Why is the output quality worse?}
-
-\textit{Generated text:}
-
+\textbf{Generated text, temperature $1.0$.}
 \begin{quote}
-% TODO: paste your generated text here
+Once upon a time, there was a little girl named Lily. She loved to play outside in the snow. One day, she saw a unique triangle in the snow. It was big and round. Lily was very happy and excited to play with it.
+
+Lily picked up the triangle and put it on the ground. She played with it all day long. When it was time to go inside, she was tired but happy. So, she put the triangle in the snow and went inside to have some hot cocoa.
+
+While she was outside, the unique triangle was starting to melt. It got bigger and bigger, and the triangle felt sad. Lily sat down under the snow and laughed. The triangle's face was gone, and the cone was gone.
+
+From that day on, Lily and the unique triangle had many more fun playing in the snow. They made snow angels, even when it rained. And they always played in the snow together.
 \end{quote}
 
-\textit{Fluency commentary:} % TODO: comment on fluency and why it's worse
+\textbf{Generated text, temperature $1.3$.}
+\begin{quote}
+Once upon a time, there was a little girl named Lily. She loved to ask her mom to make some shampoo. One day, it was spoiled and was all one fun hair she could do.
 
+Lily's mom told her to put a new red thread around like a lamp one by one. She said it would keep blue again, so Lily could have eleven wheel parties at once.
 
-\problem{leaderboard}{Leaderboard}{6}
+So every day. When the heel from put over all of the facereenening sizes of first, why hard about it now? But Lily resisted admiring it! They clapped for her, and she was so happy. She was able to put the oil over it every day.
+\end{quote}
 
-\deliverable{The final validation loss, an associated learning curve (wall-clock-time x-axis, < 45 min), and a description of what you did.}
+\textbf{Fluency and sampling.} Of these three samples, temperature $0.7$
+produced the most coherent story and mostly grammatical sentences. However,
+it repeated ``the bees'' and ended with a moral weakly connected to the plot.
+At $1.0$, many sentences remained locally fluent, but the triangle was
+described as round, grew while melting, and was followed by an unexplained
+cone. At $1.3$, grammatical errors, unrelated phrases, and the malformed word
+``facereenening'' made the story difficult to follow.
 
-\begin{figure}[H]
-    \centering
-    % \includegraphics[width=0.8\textwidth]{figures/leaderboard.png}
-    \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm} Leaderboard submission learning curve \\ \textit{(insert figure here)}\vspace{2cm}}}
-    \caption{Learning curve for the leaderboard submission (wall-clock time on x-axis).}
-    \label{fig:leaderboard}
-\end{figure}
-
-\textit{Final validation loss:} % TODO: report your loss
-
-\textit{Description:} % TODO: describe what modifications you made
-
+Two factors affect output quality. First, temperature changes the sampling
+distribution: increasing it gives lower-probability tokens more weight,
+potentially increasing variety while also admitting errors. Top-$p$ further
+restricts the candidate set; it was held fixed here, so its effect was not
+measured separately. Second, the learned model distribution matters: this
+40.96M-token model can produce familiar story structures but still exhibits
+repetition, semantic contradictions, and weak long-range consistency even at
+the lowest tested temperature. The observed temperature ranking applies to
+this prompt and seed; it does not establish a generally optimal temperature.

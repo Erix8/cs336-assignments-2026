@@ -9,7 +9,7 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
-from cs336_basics.data import data_loading
+from cs336_basics.data import get_batch
 from cs336_basics.model import (
     Embedding,
     FeedForward,
@@ -17,7 +17,7 @@ from cs336_basics.model import (
     MultiHeadSelfAttention,
     RMSNorm,
     RoPE,
-    Transformer,
+    TransformerLM,
     TransformerBlock,
     scaled_dot_product_attention,
 )
@@ -408,7 +408,7 @@ def run_transformer_lm(
     """
     device = in_indices.device
     dtype = weights["token_embeddings.weight"].dtype
-    transformer = Transformer(
+    transformer = TransformerLM(
         vocab_size, context_length, d_model, num_layers, num_heads, d_ff, rope_theta, device=device, dtype=dtype
     )
     mapped_weights = {key.replace(".attn.output_proj.", ".attn.o_proj."): value for key, value in weights.items()}
@@ -475,7 +475,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    return data_loading(dataset, batch_size, context_length, device)
+    return get_batch(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:

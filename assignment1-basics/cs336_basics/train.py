@@ -11,8 +11,8 @@ import numpy.typing as npt
 import torch
 from torch import Tensor
 
-from cs336_basics.data import data_loading
-from cs336_basics.model import Transformer
+from cs336_basics.data import get_batch
+from cs336_basics.model import TransformerLM
 from cs336_basics.nn_utils import cross_entropy, gradient_clipping
 from cs336_basics.optimizer import AdamW, lr_cosine_schedule
 from cs336_basics.serialization import load_checkpoint, save_checkpoint
@@ -298,7 +298,7 @@ def evaluate(
     try:
         losses = []
         for _ in range(args.eval_batches):
-            inputs, targets = data_loading(
+            inputs, targets = get_batch(
                 dataset=dataset,
                 batch_size=args.eval_batch_size,
                 context_length=args.context_length,
@@ -388,7 +388,7 @@ def train(
             group["lr"] = lr
         optimizer.zero_grad()
 
-        inputs, targets = data_loading(
+        inputs, targets = get_batch(
             dataset=train_dataset,
             batch_size=args.batch_size,
             context_length=args.context_length,
@@ -473,7 +473,7 @@ def main():
     train_dataset = load_dataset(args.train_path, args.context_length)
     val_dataset = load_dataset(args.valid_path, args.context_length)
 
-    model = Transformer(
+    model = TransformerLM(
         args.vocab_size,
         args.context_length,
         args.d_model,

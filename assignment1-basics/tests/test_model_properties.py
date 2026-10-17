@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from cs336_basics.model import FeedForward, RMSNorm, Transformer, scaled_dot_product_attention
+from cs336_basics.model import FeedForward, RMSNorm, TransformerLM, scaled_dot_product_attention
 from cs336_basics.nn_utils import cross_entropy
 
 
@@ -20,7 +20,7 @@ def fixed_torch_rng():
     ids=["baseline", "nope", "no-norm", "post-norm", "silu"],
 )
 def test_transformer_future_tokens_do_not_change_prefix(batch_size, variant):
-    model = Transformer(
+    model = TransformerLM(
         vocab_size=32,
         context_length=6,
         d_model=16,
